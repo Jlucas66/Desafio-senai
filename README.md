@@ -60,7 +60,7 @@ TODO: comandos do backend e do frontend (Capítulos 3, 10 e 15).
 
 ## 4. Variáveis de ambiente
 
-Cada pasta tem um `.env.example` com os valores padrão. Copie para `.env` antes de executar.
+Todas as variáveis ficam no `.env.example` da raiz. Copie para `.env` antes de executar.
 
 ### Raiz (`.env`, usado pelo Docker Compose)
 
