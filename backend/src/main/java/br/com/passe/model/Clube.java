@@ -11,15 +11,18 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "clubes")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Setter
+@NoArgsConstructor
 public class Clube {
+
+    public static final BigDecimal CAIXA_INICIAL = new BigDecimal("300.00");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

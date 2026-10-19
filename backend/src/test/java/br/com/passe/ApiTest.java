@@ -34,10 +34,14 @@ public abstract class ApiTest {
     @Autowired
     protected JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    protected RelogioDeTeste relogio;
+
     @BeforeEach
     void limparBanco() {
         jdbcTemplate.execute("TRUNCATE duelos_partida, partidas, escalacoes, transacoes, contratos, jogadores, clubes "
                 + "RESTART IDENTITY CASCADE");
+        relogio.ajustar("2026-11-02T10:15-03:00");
     }
 
     protected ResultActions enviar(MockHttpServletRequestBuilder pedido, String json) throws Exception {
@@ -76,6 +80,30 @@ public abstract class ApiTest {
                 .andReturn().getResponse().getContentAsString();
         JsonNode corpo = objectMapper.readTree(resposta);
         return corpo.get("id").asInt();
+    }
+
+    protected int criarClubePelaApi(String nome, String sigla) throws Exception {
+        String resposta = enviar(post("/clubs"), Map.of("name", nome, "acronym", sigla))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(resposta).get("id").asInt();
+    }
+
+    protected ResultActions comprar(int jogadorId, int clubeId, String fimDaFidelidade) throws Exception {
+        return enviar(post("/players/" + jogadorId + "/buy"),
+                Map.of("club_id", clubeId, "loyalty_until", fimDaFidelidade));
+    }
+
+    protected ResultActions vender(int jogadorId) throws Exception {
+        return mockMvc.perform(post("/players/" + jogadorId + "/sell"));
+    }
+
+    protected void definirValorBase(int jogadorId, String valorBase) {
+        jdbcTemplate.update("UPDATE jogadores SET valor_base = ?::numeric WHERE id = ?", valorBase, jogadorId);
+    }
+
+    protected void definirCaixa(int clubeId, String caixa) {
+        jdbcTemplate.update("UPDATE clubes SET caixa = ?::numeric WHERE id = ?", caixa, clubeId);
     }
 
     protected int criarClube(String nome, String sigla) {

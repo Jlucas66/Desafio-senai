@@ -4,6 +4,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +48,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(RegraNegocioException.class)
     public ResponseEntity<ErroResponse> tratarRegraNegocio(RegraNegocioException ex) {
         return resposta(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErroResponse> tratarRestricaoDoBanco(DataIntegrityViolationException ex) {
+        LOG.warn("Restrição do banco violada", ex);
+        return resposta(HttpStatus.CONFLICT, "A operação conflita com o estado atual dos dados.");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

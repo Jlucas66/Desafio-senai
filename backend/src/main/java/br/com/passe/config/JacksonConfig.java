@@ -1,5 +1,7 @@
 package br.com.passe.config;
 
+import java.time.OffsetDateTime;
+
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +19,7 @@ public class JacksonConfig {
         return builder -> builder
                 .featuresToEnable(DeserializationFeature.FAIL_ON_NUMBERS_FOR_ENUMS)
                 .deserializerByType(Integer.class, new InteiroEstritoDeserializer())
+                .serializerByType(OffsetDateTime.class, new DataHoraSerializer())
                 .postConfigurer(mapper -> mapper.coercionConfigFor(LogicalType.Textual)
                         .setCoercion(CoercionInputShape.Integer, CoercionAction.Fail)
                         .setCoercion(CoercionInputShape.Float, CoercionAction.Fail)

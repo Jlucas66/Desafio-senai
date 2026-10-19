@@ -66,6 +66,10 @@ mvn test
 
 Os testes da API sobem um PostgreSQL 16 descartável pelo Testcontainers, separado do banco da seção 2; é preciso apenas que o Docker esteja rodando. O comando termina sozinho.
 
+### Testes manuais pelo Postman (opcional)
+
+A coleção `docs/postman/passe-backend.postman_collection.json` tem as requisições de jogadores, clubes, compra, venda e histórico, cada uma com a resposta esperada. Com o banco recém-criado e o backend no ar, importe-a no Postman e rode-a inteira, em ordem, pelo Collection Runner.
+
 ## 4. Variáveis de ambiente
 
 Todas as variáveis ficam no `.env.example` da raiz. Copie para `.env` antes de executar.
@@ -115,6 +119,12 @@ TODO: demais bibliotecas do backend e do frontend, com o motivo de cada uma.
 - **Id da URL validado pela própria rota** (`[1-9][0-9]*`): `01`, `0`, `-1` e `abc` não casam com nenhuma rota e respondem 404, em qualquer método.
 - **Listagem de jogadores filtrada, ordenada e paginada na aplicação:** o valor de mercado não é gravado e a ordem alfabética do enunciado (sem acentos, pela ordem Unicode) não coincide com a do PostgreSQL, então a API carrega os jogadores ativos, calcula os valores e aplica busca, filtros, ordenação e paginação em Java. Para o tamanho da liga (até 20 clubes de 12 jogadores, mais os livres), o custo é pequeno.
 - **Jogador excluído** é filtrado em todas as consultas (`excluido_em IS NULL`) e responde 404 como um id inexistente.
+- **Datas (RN01):** a entrada é conferida por expressão regular e lida com `ResolverStyle.STRICT`, que recusa datas inexistentes (`2027-02-30`, `24:00`) em vez de ajustá-las; toda data da resposta é convertida para `-03:00` e formatada com segundos. O "agora" vem de um `Clock` de Brasília injetado, que os testes substituem por um relógio ajustável.
+- **Fim da fidelidade no passado ou além de 1.095 dias responde 400**, como na tabela "Limites de cada campo" (que não marca esse limite com 409); a conferência usa o mesmo instante gravado na compra.
+- **Compra e venda bloqueiam a linha do clube** (`SELECT ... FOR UPDATE`) durante a operação, para que duas operações simultâneas não leiam o mesmo caixa ou a mesma contagem de elenco. Se uma restrição do banco for violada mesmo assim (por exemplo, dois contratos `ATIVO` para o mesmo jogador), a API responde 409 e a transação é desfeita.
+- **Contrato com multa vira `RESCINDIDO`, sem multa vira `ENCERRADO`** (RN15, item 4); como o percentual mínimo é 5% e o valor de mercado mínimo é 1,00, só há multa quando ainda faltam dias de fidelidade.
+- **Clubes ordenados na aplicação**, pelo mesmo motivo da listagem de jogadores: o patrimônio depende do valor de mercado, que não é gravado.
+- **Exportação CSV** com `Content-Type: text/csv;charset=UTF-8` e `Content-Disposition: attachment`, para o navegador baixar o arquivo com nome.
 
 TODO: novas decisões a cada capítulo.
 
@@ -127,6 +137,6 @@ TODO (ao final: listar o que faltou ou escrever "Nenhuma").
 TODO: revisar e completar ao final.
 
 - **Ferramenta:** Claude (Anthropic).
-- **Onde:** planejamento da arquitetura e do cronograma; modelagem do banco e migration `V1__criar_tabelas.sql`; configuração do Docker Compose; módulo de jogadores do backend (cálculos, validações, endpoints de `/players` e testes), com o Claude Code.
+- **Onde:** planejamento da arquitetura e do cronograma; modelagem do banco e migration `V1__criar_tabelas.sql`; configuração do Docker Compose; módulos de jogadores, clubes, mercado (compra e venda) e histórico do backend (cálculos, validações, endpoints, testes automatizados e coleção do Postman), com o Claude Code.
 - **Como e por quê:** usei o assistente como guia passo a passo, pedindo explicações dos conceitos (volumes do Docker, Flyway, constraints) antes de aplicar cada etapa.
 - **O que aceitei, alterei ou descartei:** TODO.

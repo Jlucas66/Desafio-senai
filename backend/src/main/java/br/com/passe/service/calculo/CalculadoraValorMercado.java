@@ -22,6 +22,10 @@ public final class CalculadoraValorMercado {
     private CalculadoraValorMercado() {
     }
 
+    public static BigDecimal calcular(Jogador jogador) {
+        return calcular(jogador.getValorBase(), jogador.getCondicao(), jogador.getAgilidade(), jogador.getIdade());
+    }
+
     public static BigDecimal calcular(BigDecimal valorBase, Condicao condicao, int agilidade, int idade) {
         BigDecimal percentualTotal = ajustePorIdade(idade)
                 .subtract(descontoPorCondicao(condicao, agilidade))

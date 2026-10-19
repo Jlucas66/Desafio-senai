@@ -1,6 +1,5 @@
 package br.com.passe.service;
 
-import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
@@ -26,7 +25,6 @@ import br.com.passe.repository.ClubeRepository;
 import br.com.passe.repository.JogadorRepository;
 import br.com.passe.service.calculo.CalculadoraOverall;
 import br.com.passe.service.calculo.CalculadoraValorBase;
-import br.com.passe.service.calculo.CalculadoraValorMercado;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -39,6 +37,7 @@ public class JogadorService {
 
     private final JogadorRepository jogadorRepository;
     private final ClubeRepository clubeRepository;
+    private final JogadorMapper jogadorMapper;
     private final Clock clock;
 
     @Transactional
@@ -59,17 +58,17 @@ public class JogadorService {
         jogador.setCriadoEm(agora);
         jogador.setAtualizadoEm(agora);
 
-        return paraResponse(jogadorRepository.save(jogador));
+        return jogadorMapper.paraResponse(jogadorRepository.save(jogador));
     }
 
     @Transactional(readOnly = true)
     public JogadorResponse buscar(int id) {
-        return paraResponse(buscarAtivo(id));
+        return jogadorMapper.paraResponse(jogadorRepository.buscarAtivo(id));
     }
 
     @Transactional
     public JogadorResponse editar(int id, JogadorEdicaoRequest dados) {
-        Jogador jogador = buscarAtivo(id);
+        Jogador jogador = jogadorRepository.buscarAtivo(id);
         if (!jogador.estaLivre() && dados.position() != jogador.getPosicao()) {
             throw new RegraNegocioException("Jogador com clube não pode mudar de posição.");
         }
@@ -82,15 +81,15 @@ public class JogadorService {
         jogador.setAgilidade(dados.agility());
         jogador.setIdade(dados.age());
         jogador.setAtualizadoEm(agora());
-        return paraResponse(jogador);
+        return jogadorMapper.paraResponse(jogador);
     }
 
     @Transactional
     public JogadorResponse alterarCondicao(int id, CondicaoRequest dados) {
-        Jogador jogador = buscarAtivo(id);
+        Jogador jogador = jogadorRepository.buscarAtivo(id);
         Condicao novaCondicao = dados.condition();
         if (novaCondicao == jogador.getCondicao()) {
-            return paraResponse(jogador);
+            return jogadorMapper.paraResponse(jogador);
         }
         if (jogador.getCondicao() == Condicao.DOENTE && novaCondicao == Condicao.APTO) {
             throw new RegraNegocioException("Jogador DOENTE não pode passar direto para APTO.");
@@ -98,12 +97,12 @@ public class JogadorService {
 
         jogador.setCondicao(novaCondicao);
         jogador.setAtualizadoEm(agora());
-        return paraResponse(jogador);
+        return jogadorMapper.paraResponse(jogador);
     }
 
     @Transactional
     public void excluir(int id) {
-        Jogador jogador = buscarAtivo(id);
+        Jogador jogador = jogadorRepository.buscarAtivo(id);
         if (!jogador.estaLivre()) {
             throw new RegraNegocioException("Só jogador livre pode ser excluído.");
         }
@@ -119,18 +118,11 @@ public class JogadorService {
             throw new RecursoNaoEncontradoException("Clube não encontrado.");
         }
         List<JogadorResponse> encontrados = jogadorRepository.findAllByExcluidoEmIsNull().stream()
-                .map(this::paraResponse)
+                .map(jogadorMapper::paraResponse)
                 .filter(jogador -> atendeAoFiltro(jogador, filtro))
                 .sorted(comparadorDe(filtro.ordenacao()))
                 .toList();
         return PaginaResponse.de(encontrados, filtro.pagina(), filtro.limite());
-    }
-
-    private JogadorResponse paraResponse(Jogador jogador) {
-        int overall = CalculadoraOverall.calcular(jogador.getPosicao(), jogador.getAtributos());
-        BigDecimal valorDeMercado = CalculadoraValorMercado.calcular(
-                jogador.getValorBase(), jogador.getCondicao(), jogador.getAgilidade(), jogador.getIdade());
-        return JogadorResponse.de(jogador, overall, valorDeMercado);
     }
 
     private boolean atendeAoFiltro(JogadorResponse jogador, FiltroJogadores filtro) {
@@ -166,11 +158,6 @@ public class JogadorService {
             case AGE_DESC -> Comparator.comparing(JogadorResponse::age).reversed();
             case POSITION -> Comparator.comparing(JogadorResponse::position);
         };
-    }
-
-    private Jogador buscarAtivo(int id) {
-        return jogadorRepository.findByIdAndExcluidoEmIsNull(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Jogador não encontrado."));
     }
 
     private OffsetDateTime agora() {
