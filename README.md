@@ -58,6 +58,14 @@ TODO: comandos do backend e do frontend (Capítulos 3, 10 e 15).
 - Origem da API: `http://localhost:8080` (o script acrescenta `/api/v1`)
 - URL do frontend: `http://localhost:3000`
 
+### Testes automatizados do backend (na pasta `backend/`)
+
+```bash
+mvn test
+```
+
+Os testes da API sobem um PostgreSQL 16 descartável pelo Testcontainers, separado do banco da seção 2; é preciso apenas que o Docker esteja rodando. O comando termina sozinho.
+
 ## 4. Variáveis de ambiente
 
 Todas as variáveis ficam no `.env.example` da raiz. Copie para `.env` antes de executar.
@@ -85,7 +93,11 @@ TODO: variáveis do backend e do frontend (Capítulos 3 e 10).
 └── .env.example          variáveis do Docker Compose
 ```
 
-TODO: tabela de bibliotecas do backend e do frontend, com o motivo de cada uma.
+| Biblioteca | Camada | Motivo |
+| --- | --- | --- |
+| Testcontainers (PostgreSQL) | Backend (testes) | Roda os testes da API contra o mesmo PostgreSQL 16 da aplicação, num contêiner descartável, sem tocar no banco de desenvolvimento. |
+
+TODO: demais bibliotecas do backend e do frontend, com o motivo de cada uma.
 
 ## 6. Decisões e premissas
 
@@ -95,6 +107,14 @@ TODO: tabela de bibliotecas do backend e do frontend, com o motivo de cada uma.
 - **Regras que dependem de contagem** (máximo de 20 clubes, 12 jogadores por clube, 5 titulares) são validadas no backend, dentro da mesma transação da operação; o banco garante as demais com `CHECK`, `UNIQUE` e chaves estrangeiras.
 - **No máximo um contrato `ATIVO` por jogador:** índice único parcial em `contratos (jogador_id) WHERE situacao = 'ATIVO'`.
 - **Spring Boot 3.5.16:** o enunciado exige Spring Boot 3; a 3.5.16 é a última versão da linha 3.
+
+- **Backend em camadas** (`model` → `repository` → `service` → `controller`): as entidades JPA só guardam dados; os repositórios acessam o banco; os services aplicam as regras de negócio e as transações; os controllers só recebem a requisição, validam a entrada pelos DTOs (`dto`, com as anotações de `validation`) e chamam o service.
+- **Cálculos do jogador em classes próprias** (`service/calculo`): overall, valor base e valor de mercado ficam cada um num único lugar, sem Spring nem banco, e são testados com as tabelas do enunciado.
+- **Valores em moedas com `BigDecimal`**, arredondados uma única vez no resultado final com `RoundingMode.HALF_UP` (meio para longe do zero).
+- **Leitura estrita do JSON (V2 e V5):** número em texto (`"15"`), número com parte fracionária em campo inteiro (`50.5`), número no lugar de texto e número no lugar de valor de lista são recusados com 400; `50.0` é aceito como 50.
+- **Id da URL validado pela própria rota** (`[1-9][0-9]*`): `01`, `0`, `-1` e `abc` não casam com nenhuma rota e respondem 404, em qualquer método.
+- **Listagem de jogadores filtrada, ordenada e paginada na aplicação:** o valor de mercado não é gravado e a ordem alfabética do enunciado (sem acentos, pela ordem Unicode) não coincide com a do PostgreSQL, então a API carrega os jogadores ativos, calcula os valores e aplica busca, filtros, ordenação e paginação em Java. Para o tamanho da liga (até 20 clubes de 12 jogadores, mais os livres), o custo é pequeno.
+- **Jogador excluído** é filtrado em todas as consultas (`excluido_em IS NULL`) e responde 404 como um id inexistente.
 
 TODO: novas decisões a cada capítulo.
 
@@ -107,6 +127,6 @@ TODO (ao final: listar o que faltou ou escrever "Nenhuma").
 TODO: revisar e completar ao final.
 
 - **Ferramenta:** Claude (Anthropic).
-- **Onde:** planejamento da arquitetura e do cronograma; modelagem do banco e migration `V1__criar_tabelas.sql`; configuração do Docker Compose.
+- **Onde:** planejamento da arquitetura e do cronograma; modelagem do banco e migration `V1__criar_tabelas.sql`; configuração do Docker Compose; módulo de jogadores do backend (cálculos, validações, endpoints de `/players` e testes), com o Claude Code.
 - **Como e por quê:** usei o assistente como guia passo a passo, pedindo explicações dos conceitos (volumes do Docker, Flyway, constraints) antes de aplicar cada etapa.
 - **O que aceitei, alterei ou descartei:** TODO.

@@ -1,0 +1,1940 @@
+{
+  "info": {
+    "name": "Passe - Jogadores",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Testes manuais do módulo de jogadores (etapas 1 a 5). Rode a pasta inteira em ordem pelo Collection Runner."
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080/api/v1"
+    },
+    {
+      "key": "player_id",
+      "value": ""
+    },
+    {
+      "key": "excluir_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Cadastro e consulta",
+      "item": [
+        {
+          "name": "Cadastrar Meia Lua (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Tem Location\", () => pm.expect(pm.response.headers.get(\"Location\")).to.match(/\\/api\\/v1\\/players\\/\\d+$/));",
+                  "pm.test(\"condition = APTO\", () => pm.expect(pm.response.json().condition).to.eql(\"APTO\"));",
+                  "pm.test(\"base_value = 40\", () => pm.expect(pm.response.json().base_value).to.eql(40));",
+                  "pm.test(\"market_value = 40\", () => pm.expect(pm.response.json().market_value).to.eql(40));",
+                  "pm.test(\"overall = 75\", () => pm.expect(pm.response.json().overall).to.eql(75));",
+                  "pm.test(\"club_id = None\", () => pm.expect(pm.response.json().club_id).to.eql(null));",
+                  "pm.collectionVariables.set(\"player_id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar por id (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"name = Meia Lua\", () => pm.expect(pm.response.json().name).to.eql(\"Meia Lua\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Campos calculados enviados são ignorados (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86,\n  \"base_value\": 500,\n  \"market_value\": 500,\n  \"overall\": 99,\n  \"condition\": \"DOENTE\",\n  \"club_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"base_value = 40\", () => pm.expect(pm.response.json().base_value).to.eql(40));",
+                  "pm.test(\"condition = APTO\", () => pm.expect(pm.response.json().condition).to.eql(\"APTO\"));",
+                  "pm.test(\"club_id = None\", () => pm.expect(pm.response.json().club_id).to.eql(null));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Espaços do nome são normalizados (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Meia   Zeta \",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"name = Meia Zeta\", () => pm.expect(pm.response.json().name).to.eql(\"Meia Zeta\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Validações do cadastro (400)",
+      "item": [
+        {
+          "name": "Corpo que é array",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Corpo de erro tem message\", () => pm.expect(pm.response.json().message).to.be.a(\"string\").and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "JSON inválido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": ",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Corpo de erro tem message\", () => pm.expect(pm.response.json().message).to.be.a(\"string\").and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Número como texto (\"15\")",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": \"15\",\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inteiro com fração (50.5)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 50.5,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inteiro com fração zero (50.0) é aceito",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 50.0,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"agility = 50\", () => pm.expect(pm.response.json().agility).to.eql(50));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Valor de lista em minúsculas",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"mei\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Campo obrigatório ausente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Campo fora do snake_case (Agility)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86,\n  \"Agility\": 85\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nome com uma palavra só",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ronaldinho\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nome com dígito",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua 2\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Soma dos atributos acima de 480",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 81,\n  \"shooting\": 80,\n  \"passing\": 80,\n  \"dribbling\": 80,\n  \"defending\": 80,\n  \"physical\": 80,\n  \"potential\": 81\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "35 anos com agilidade acima de 85",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 90,\n  \"age\": 35,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 82\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Potencial menor que o maior atributo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 81\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "33 anos com potencial diferente do maior atributo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 33,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Caminhos e ids inexistentes (404)",
+      "item": [
+        {
+          "name": "Id com letras",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/abc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "abc"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Corpo de erro tem message\", () => pm.expect(pm.response.json().message).to.be.a(\"string\").and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Id com zero à esquerda",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/01",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "01"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Id que não existe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/999999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Caminho inexistente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/inexistente",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "inexistente"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Edição e condição",
+      "item": [
+        {
+          "name": "Editar (200) — valor base não muda",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 26,\n  \"pace\": 99,\n  \"base_value\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"age = 26\", () => pm.expect(pm.response.json().age).to.eql(26));",
+                  "pm.test(\"pace = 70\", () => pm.expect(pm.response.json().pace).to.eql(70));",
+                  "pm.test(\"base_value = 40\", () => pm.expect(pm.response.json().base_value).to.eql(40));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar sem um dos quatro campos (400)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 85\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Idade menor que a atual (409)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 24\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Corpo de erro tem message\", () => pm.expect(pm.response.json().message).to.be.a(\"string\").and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Condição MAL_CONDICIONADO (200, valor 37,00)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/condition",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "condition"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"condition\": \"MAL_CONDICIONADO\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"market_value = 37\", () => pm.expect(pm.response.json().market_value).to.eql(37));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Condição DOENTE (200, valor 34,00)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/condition",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "condition"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"condition\": \"DOENTE\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"market_value = 34\", () => pm.expect(pm.response.json().market_value).to.eql(34));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DOENTE direto para APTO (409)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/condition",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "condition"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"condition\": \"APTO\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Condição atual de novo (200, sem mudança)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/condition",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "condition"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"condition\": \"DOENTE\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"condition = DOENTE\", () => pm.expect(pm.response.json().condition).to.eql(\"DOENTE\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Condição ausente (400)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/condition",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "condition"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DOENTE para MAL_CONDICIONADO (200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/condition",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "condition"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"condition\": \"MAL_CONDICIONADO\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "MAL_CONDICIONADO para APTO (200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/condition",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "condition"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"condition\": \"APTO\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"market_value = 40\", () => pm.expect(pm.response.json().market_value).to.eql(40));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Listagem",
+      "item": [
+        {
+          "name": "Listar com padrões (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"meta.page = 1\", () => pm.expect(pm.response.json().meta.page).to.eql(1));",
+                  "pm.test(\"meta.limit = 10\", () => pm.expect(pm.response.json().meta.limit).to.eql(10));",
+                  "pm.test(\"data é lista\", () => pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Busca, filtro e ordenação (exemplo 2.1.1)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?search=lua&position=MEI&sort=value_desc&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "lua"
+                },
+                {
+                  "key": "position",
+                  "value": "MEI"
+                },
+                {
+                  "key": "sort",
+                  "value": "value_desc"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Todos são MEI com lua no nome\", () => pm.response.json().data.forEach(j => { pm.expect(j.position).to.eql(\"MEI\"); pm.expect(j.name.toLowerCase()).to.include(\"lua\"); }));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Página além da última (200, data vazio)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?page=999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "999"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"data vazio\", () => pm.expect(pm.response.json().data).to.be.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Faixa de idade e de valor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?min_age=20&max_age=30&min_value=30&max_value=45.5",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "min_age",
+                  "value": "20"
+                },
+                {
+                  "key": "max_age",
+                  "value": "30"
+                },
+                {
+                  "key": "min_value",
+                  "value": "30"
+                },
+                {
+                  "key": "max_value",
+                  "value": "45.5"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Dois critérios de ordenação",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?sort=position,age_desc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "position,age_desc"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mesmo campo duas vezes no sort (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?sort=value_asc,value_desc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "value_asc,value_desc"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Parâmetro vazio (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?position=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "position",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Valor de lista em minúsculas (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?position=mei",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "position",
+                  "value": "mei"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "min_age maior que max_age (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?min_age=30&max_age=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "min_age",
+                  "value": "30"
+                },
+                {
+                  "key": "max_age",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "free=true com club_id (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?free=true&club_id=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "free",
+                  "value": "true"
+                },
+                {
+                  "key": "club_id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "limit acima de 50 (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?limit=51",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "51"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clube inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?club_id=999999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "club_id",
+                  "value": "999999"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Exclusão",
+      "item": [
+        {
+          "name": "Cadastrar jogador para excluir (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lateral Teste\",\n  \"position\": \"LAT\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"excluir_id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir jogador livre (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/{{excluir_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{excluir_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Sem corpo\", () => pm.expect(pm.response.text()).to.be.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar excluído (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/{{excluir_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{excluir_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar excluído (404)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{excluir_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{excluir_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lateral Teste\",\n  \"position\": \"LAT\",\n  \"agility\": 85,\n  \"age\": 25\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir de novo (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/{{excluir_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{excluir_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
