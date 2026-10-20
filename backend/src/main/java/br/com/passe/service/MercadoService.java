@@ -23,6 +23,7 @@ import br.com.passe.model.TipoTransacao;
 import br.com.passe.model.Transacao;
 import br.com.passe.repository.ClubeRepository;
 import br.com.passe.repository.ContratoRepository;
+import br.com.passe.repository.EscalacaoRepository;
 import br.com.passe.repository.JogadorRepository;
 import br.com.passe.repository.TransacaoRepository;
 import br.com.passe.service.calculo.CalculadoraComissao;
@@ -43,6 +44,7 @@ public class MercadoService {
     private final ClubeRepository clubeRepository;
     private final ContratoRepository contratoRepository;
     private final TransacaoRepository transacaoRepository;
+    private final EscalacaoRepository escalacaoRepository;
     private final Clock clock;
 
     @Transactional
@@ -109,6 +111,7 @@ public class MercadoService {
         jogador.setAtualizadoEm(agora);
         contrato.setSituacao(multa.signum() > 0 ? SituacaoContrato.RESCINDIDO : SituacaoContrato.ENCERRADO);
         contrato.setEncerradoEm(agora);
+        escalacaoRepository.removerJogador(jogadorId);
         Transacao transacao = transacaoRepository.save(
                 novaTransacao(jogador, clube, TipoTransacao.VENDA, valor, comissao, multa, lucro, credito, agora));
 

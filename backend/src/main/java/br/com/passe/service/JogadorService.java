@@ -22,6 +22,7 @@ import br.com.passe.model.Atributos;
 import br.com.passe.model.Condicao;
 import br.com.passe.model.Jogador;
 import br.com.passe.repository.ClubeRepository;
+import br.com.passe.repository.EscalacaoRepository;
 import br.com.passe.repository.JogadorRepository;
 import br.com.passe.service.calculo.CalculadoraOverall;
 import br.com.passe.service.calculo.CalculadoraValorBase;
@@ -37,6 +38,7 @@ public class JogadorService {
 
     private final JogadorRepository jogadorRepository;
     private final ClubeRepository clubeRepository;
+    private final EscalacaoRepository escalacaoRepository;
     private final JogadorMapper jogadorMapper;
     private final Clock clock;
 
@@ -97,6 +99,9 @@ public class JogadorService {
 
         jogador.setCondicao(novaCondicao);
         jogador.setAtualizadoEm(agora());
+        if (novaCondicao == Condicao.DOENTE) {
+            escalacaoRepository.removerJogador(id);
+        }
         return jogadorMapper.paraResponse(jogador);
     }
 

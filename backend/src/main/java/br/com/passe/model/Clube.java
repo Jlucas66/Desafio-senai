@@ -35,5 +35,7 @@ public class Clube {
 
     private BigDecimal caixa;
 
+    private Formacao formacao;
+
     private OffsetDateTime criadoEm;
 }

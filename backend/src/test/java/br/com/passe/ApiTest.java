@@ -1,9 +1,12 @@
 package br.com.passe;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +27,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 public abstract class ApiTest {
+
+    private static final String FIDELIDADE_DO_TIME = "2027-03-02T10:15-03:00";
 
     @Autowired
     protected MockMvc mockMvc;
@@ -117,5 +122,60 @@ public abstract class ApiTest {
 
     protected void colocarNoClube(int jogadorId, int clubeId) {
         jdbcTemplate.update("UPDATE jogadores SET clube_id = ? WHERE id = ?", clubeId, jogadorId);
+    }
+
+    protected ResultActions escalar(int clubeId, String formacao, List<Integer> jogadores) throws Exception {
+        return enviar(put("/clubs/" + clubeId + "/lineup"), Map.of("formation", formacao, "player_ids", jogadores));
+    }
+
+    protected List<Integer> montarAguias(int clube) throws Exception {
+        return montarTime(
+                clube,
+                atleta("Rui Prado", "GOL", 50, 50, 50, 77),
+                atleta("Téo Brandão", "ZAG", 50, 50, 50, 84),
+                atleta("Davi Lins", "LAT", 50, 50, 74, 66),
+                atleta("Lauro Neves", "MEI", 50, 82, 50, 50),
+                atleta("Otto Rangel", "ATA", 75, 50, 50, 50));
+    }
+
+    protected List<Integer> montarDelta(int clube) throws Exception {
+        return montarTime(
+                clube,
+                atleta("Ivo Teles", "GOL", 50, 50, 50, 72),
+                atleta("Hugo Vaz", "ZAG", 50, 50, 50, 84),
+                atleta("Lino Matos", "LAT", 50, 50, 79, 63),
+                atleta("Nei Soares", "MEI", 50, 70, 50, 50),
+                atleta("Ugo Falcão", "ATA", 81, 50, 50, 50));
+    }
+
+    @SafeVarargs
+    private List<Integer> montarTime(int clube, Map<String, Object>... jogadores) throws Exception {
+        List<Integer> ids = new ArrayList<>();
+        for (Map<String, Object> jogador : jogadores) {
+            int id = cadastrarJogador(jogador);
+            comprar(id, clube, FIDELIDADE_DO_TIME).andExpect(status().isOk());
+            ids.add(id);
+        }
+        return ids;
+    }
+
+    protected static Map<String, Object> atleta(
+            String nome, String posicao, int finalizacao, int passe, int drible, int defesa) {
+        Map<String, Object> jogador = new HashMap<>(jogadorValido());
+        jogador.put("name", nome);
+        jogador.put("position", posicao);
+        jogador.put("agility", 50);
+        jogador.put("pace", 50);
+        jogador.put("shooting", finalizacao);
+        jogador.put("passing", passe);
+        jogador.put("dribbling", drible);
+        jogador.put("defending", defesa);
+        jogador.put("physical", 50);
+        jogador.put("potential", 90);
+        return jogador;
+    }
+
+    protected double caixaDoClube(int clube) {
+        return jdbcTemplate.queryForObject("SELECT caixa FROM clubes WHERE id = ?", Double.class, clube);
     }
 }
