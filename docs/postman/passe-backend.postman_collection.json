@@ -1,0 +1,5333 @@
+{
+  "info": {
+    "name": "Passe - Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Testes manuais do backend: jogadores, clubes, compra, venda, histórico, escalação, partidas e classificação. Rode a coleção inteira, em ordem, com o banco recém-criado."
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080/api/v1"
+    },
+    {
+      "key": "player_id",
+      "value": ""
+    },
+    {
+      "key": "excluir_id",
+      "value": ""
+    },
+    {
+      "key": "clube_id",
+      "value": ""
+    },
+    {
+      "key": "clube2_id",
+      "value": ""
+    },
+    {
+      "key": "fidelidade",
+      "value": ""
+    },
+    {
+      "key": "fidelidade_passada",
+      "value": ""
+    },
+    {
+      "key": "fidelidade_longa",
+      "value": ""
+    },
+    {
+      "key": "clube3_id",
+      "value": ""
+    },
+    {
+      "key": "partida_id",
+      "value": ""
+    },
+    {
+      "key": "aguias_gol",
+      "value": ""
+    },
+    {
+      "key": "aguias_zag",
+      "value": ""
+    },
+    {
+      "key": "aguias_lat",
+      "value": ""
+    },
+    {
+      "key": "aguias_mei",
+      "value": ""
+    },
+    {
+      "key": "aguias_ata",
+      "value": ""
+    },
+    {
+      "key": "delta_gol",
+      "value": ""
+    },
+    {
+      "key": "delta_zag",
+      "value": ""
+    },
+    {
+      "key": "delta_lat",
+      "value": ""
+    },
+    {
+      "key": "delta_ata",
+      "value": ""
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// RN01: datas de fidelidade no horário de Brasília, calculadas a partir de agora",
+          "const brasilia = (dias) => new Date(Date.now() - 3 * 3600 * 1000 + dias * 86400 * 1000).toISOString().slice(0, 16) + '-03:00';",
+          "pm.collectionVariables.set('fidelidade', brasilia(120));",
+          "pm.collectionVariables.set('fidelidade_passada', brasilia(-1));",
+          "pm.collectionVariables.set('fidelidade_longa', brasilia(1100));"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Cadastro e consulta",
+      "item": [
+        {
+          "name": "Cadastrar Meia Lua (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Tem Location\", () => pm.expect(pm.response.headers.get(\"Location\")).to.match(/\\/api\\/v1\\/players\\/\\d+$/));",
+                  "pm.test(\"condition = APTO\", () => pm.expect(pm.response.json().condition).to.eql(\"APTO\"));",
+                  "pm.test(\"base_value = 40\", () => pm.expect(pm.response.json().base_value).to.eql(40));",
+                  "pm.test(\"market_value = 40\", () => pm.expect(pm.response.json().market_value).to.eql(40));",
+                  "pm.test(\"overall = 75\", () => pm.expect(pm.response.json().overall).to.eql(75));",
+                  "pm.test(\"club_id = None\", () => pm.expect(pm.response.json().club_id).to.eql(null));",
+                  "pm.collectionVariables.set(\"player_id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar por id (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"name = Meia Lua\", () => pm.expect(pm.response.json().name).to.eql(\"Meia Lua\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Campos calculados enviados são ignorados (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86,\n  \"base_value\": 500,\n  \"market_value\": 500,\n  \"overall\": 99,\n  \"condition\": \"DOENTE\",\n  \"club_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"base_value = 40\", () => pm.expect(pm.response.json().base_value).to.eql(40));",
+                  "pm.test(\"condition = APTO\", () => pm.expect(pm.response.json().condition).to.eql(\"APTO\"));",
+                  "pm.test(\"club_id = None\", () => pm.expect(pm.response.json().club_id).to.eql(null));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Espaços do nome são normalizados (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Meia   Zeta \",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"name = Meia Zeta\", () => pm.expect(pm.response.json().name).to.eql(\"Meia Zeta\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Validações do cadastro (400)",
+      "item": [
+        {
+          "name": "Corpo que é array",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Corpo de erro tem message\", () => pm.expect(pm.response.json().message).to.be.a(\"string\").and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "JSON inválido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": ",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Corpo de erro tem message\", () => pm.expect(pm.response.json().message).to.be.a(\"string\").and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Número como texto (\"15\")",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": \"15\",\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inteiro com fração (50.5)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 50.5,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inteiro com fração zero (50.0) é aceito",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 50.0,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"agility = 50\", () => pm.expect(pm.response.json().agility).to.eql(50));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Valor de lista em minúsculas",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"mei\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Campo obrigatório ausente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Campo fora do snake_case (Agility)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86,\n  \"Agility\": 85\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nome com uma palavra só",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ronaldinho\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nome com dígito",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua 2\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Soma dos atributos acima de 480",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 81,\n  \"shooting\": 80,\n  \"passing\": 80,\n  \"dribbling\": 80,\n  \"defending\": 80,\n  \"physical\": 80,\n  \"potential\": 81\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "35 anos com agilidade acima de 85",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 90,\n  \"age\": 35,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 82\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Potencial menor que o maior atributo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 81\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "33 anos com potencial diferente do maior atributo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 33,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Caminhos e ids inexistentes (404)",
+      "item": [
+        {
+          "name": "Id com letras",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/abc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "abc"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Corpo de erro tem message\", () => pm.expect(pm.response.json().message).to.be.a(\"string\").and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Id com zero à esquerda",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/01",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "01"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Id que não existe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/999999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Caminho inexistente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/inexistente",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "inexistente"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Edição e condição",
+      "item": [
+        {
+          "name": "Editar (200) — valor base não muda",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 26,\n  \"pace\": 99,\n  \"base_value\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"age = 26\", () => pm.expect(pm.response.json().age).to.eql(26));",
+                  "pm.test(\"pace = 70\", () => pm.expect(pm.response.json().pace).to.eql(70));",
+                  "pm.test(\"base_value = 40\", () => pm.expect(pm.response.json().base_value).to.eql(40));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar sem um dos quatro campos (400)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 85\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Idade menor que a atual (409)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"MEI\",\n  \"agility\": 85,\n  \"age\": 24\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Corpo de erro tem message\", () => pm.expect(pm.response.json().message).to.be.a(\"string\").and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Condição MAL_CONDICIONADO (200, valor 37,00)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/condition",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "condition"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"condition\": \"MAL_CONDICIONADO\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"market_value = 37\", () => pm.expect(pm.response.json().market_value).to.eql(37));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Condição DOENTE (200, valor 34,00)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/condition",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "condition"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"condition\": \"DOENTE\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"market_value = 34\", () => pm.expect(pm.response.json().market_value).to.eql(34));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DOENTE direto para APTO (409)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/condition",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "condition"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"condition\": \"APTO\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Condição atual de novo (200, sem mudança)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/condition",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "condition"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"condition\": \"DOENTE\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"condition = DOENTE\", () => pm.expect(pm.response.json().condition).to.eql(\"DOENTE\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Condição ausente (400)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/condition",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "condition"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DOENTE para MAL_CONDICIONADO (200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/condition",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "condition"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"condition\": \"MAL_CONDICIONADO\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "MAL_CONDICIONADO para APTO (200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/condition",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "condition"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"condition\": \"APTO\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"market_value = 40\", () => pm.expect(pm.response.json().market_value).to.eql(40));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Listagem",
+      "item": [
+        {
+          "name": "Listar com padrões (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"meta.page = 1\", () => pm.expect(pm.response.json().meta.page).to.eql(1));",
+                  "pm.test(\"meta.limit = 10\", () => pm.expect(pm.response.json().meta.limit).to.eql(10));",
+                  "pm.test(\"data é lista\", () => pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Busca, filtro e ordenação (exemplo 2.1.1)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?search=lua&position=MEI&sort=value_desc&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "lua"
+                },
+                {
+                  "key": "position",
+                  "value": "MEI"
+                },
+                {
+                  "key": "sort",
+                  "value": "value_desc"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Todos são MEI com lua no nome\", () => pm.response.json().data.forEach(j => { pm.expect(j.position).to.eql(\"MEI\"); pm.expect(j.name.toLowerCase()).to.include(\"lua\"); }));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Página além da última (200, data vazio)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?page=999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "999"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"data vazio\", () => pm.expect(pm.response.json().data).to.be.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Faixa de idade e de valor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?min_age=20&max_age=30&min_value=30&max_value=45.5",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "min_age",
+                  "value": "20"
+                },
+                {
+                  "key": "max_age",
+                  "value": "30"
+                },
+                {
+                  "key": "min_value",
+                  "value": "30"
+                },
+                {
+                  "key": "max_value",
+                  "value": "45.5"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Dois critérios de ordenação",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?sort=position,age_desc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "position,age_desc"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mesmo campo duas vezes no sort (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?sort=value_asc,value_desc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "value_asc,value_desc"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Parâmetro vazio (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?position=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "position",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Valor de lista em minúsculas (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?position=mei",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "position",
+                  "value": "mei"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "min_age maior que max_age (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?min_age=30&max_age=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "min_age",
+                  "value": "30"
+                },
+                {
+                  "key": "max_age",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "free=true com club_id (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?free=true&club_id=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "free",
+                  "value": "true"
+                },
+                {
+                  "key": "club_id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "limit acima de 50 (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?limit=51",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "51"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clube inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?club_id=999999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "club_id",
+                  "value": "999999"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Exclusão",
+      "item": [
+        {
+          "name": "Cadastrar jogador para excluir (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lateral Teste\",\n  \"position\": \"LAT\",\n  \"agility\": 85,\n  \"age\": 25,\n  \"pace\": 70,\n  \"shooting\": 68,\n  \"passing\": 82,\n  \"dribbling\": 79,\n  \"defending\": 55,\n  \"physical\": 64,\n  \"potential\": 86\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"excluir_id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir jogador livre (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/{{excluir_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{excluir_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Sem corpo\", () => pm.expect(pm.response.text()).to.be.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar excluído (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/{{excluir_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{excluir_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar excluído (404)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{excluir_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{excluir_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lateral Teste\",\n  \"position\": \"LAT\",\n  \"agility\": 85,\n  \"age\": 25\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir de novo (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/{{excluir_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{excluir_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7. Clubes",
+      "item": [
+        {
+          "name": "Criar Águias FC (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clubs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Águias FC\",\n  \"acronym\": \"AGU\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Tem Location\", () => pm.expect(pm.response.headers.get(\"Location\")).to.match(/\\/api\\/v1\\/clubs\\/\\d+$/));",
+                  "pm.test(\"cash = 300\", () => pm.expect(pm.response.json().cash).to.eql(300));",
+                  "pm.test(\"squad_value = 0\", () => pm.expect(pm.response.json().squad_value).to.eql(0));",
+                  "pm.test(\"net_worth = 300\", () => pm.expect(pm.response.json().net_worth).to.eql(300));",
+                  "pm.collectionVariables.set(\"clube_id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar Delta FC (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clubs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Delta FC\",\n  \"acronym\": \"DFC\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"clube2_id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nome repetido ignorando maiúsculas e espaços (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clubs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  águias   fc \",\n  \"acronym\": \"AFC\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Corpo de erro tem message\", () => pm.expect(pm.response.json().message).to.be.a(\"string\").and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sigla repetida (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clubs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Agulhas União\",\n  \"acronym\": \"AGU\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sigla que não sai do nome (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clubs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Gama SC\",\n  \"acronym\": \"SCG\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sigla em minúsculas (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clubs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Gama SC\",\n  \"acronym\": \"gsc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nome com uma palavra só (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clubs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Gama\",\n  \"acronym\": \"GAM\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nome com dígito (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clubs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Gama SC 2\",\n  \"acronym\": \"GSC\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar pelo nome (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"É um array\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar pelo patrimônio, maior primeiro (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs?sort=net_worth_desc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs"
+              ],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "net_worth_desc"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ordenação inválida (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs?sort=NAME",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs"
+              ],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "NAME"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar clube sem elenco (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Elenco vazio\", () => pm.expect(pm.response.json().players).to.be.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clube inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs/999999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "8. Compra",
+      "item": [
+        {
+          "name": "Comprar jogador livre (200)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": {{clube_id}},\n  \"loyalty_until\": \"{{fidelidade}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"type = COMPRA\", () => pm.expect(pm.response.json().type).to.eql(\"COMPRA\"));",
+                  "pm.test(\"value = 40\", () => pm.expect(pm.response.json().value).to.eql(40));",
+                  "pm.test(\"fee = 2\", () => pm.expect(pm.response.json().fee).to.eql(2));",
+                  "pm.test(\"penalty = 0\", () => pm.expect(pm.response.json().penalty).to.eql(0));",
+                  "pm.test(\"profit = None\", () => pm.expect(pm.response.json().profit).to.eql(null));",
+                  "pm.test(\"cash_change = -42\", () => pm.expect(pm.response.json().cash_change).to.eql(-42));",
+                  "pm.test(\"contract.status = ATIVO\", () => pm.expect(pm.response.json().contract.status).to.eql(\"ATIVO\"));",
+                  "pm.test(\"club_cash = 258\", () => pm.expect(pm.response.json().club_cash).to.eql(258));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar clube com elenco e contrato (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"cash = 258\", () => pm.expect(pm.response.json().cash).to.eql(258));",
+                  "pm.test(\"squad_value = 40\", () => pm.expect(pm.response.json().squad_value).to.eql(40));",
+                  "pm.test(\"net_worth = 298\", () => pm.expect(pm.response.json().net_worth).to.eql(298));",
+                  "pm.test(\"players[0].contract.remaining_days = 120\", () => pm.expect(pm.response.json().players[0].contract.remaining_days).to.eql(120));",
+                  "pm.test(\"players[0].contract.penalty_rate = 10\", () => pm.expect(pm.response.json().players[0].contract.penalty_rate).to.eql(10));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comprar jogador que já tem clube (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": {{clube2_id}},\n  \"loyalty_until\": \"{{fidelidade}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Corpo de erro tem message\", () => pm.expect(pm.response.json().message).to.be.a(\"string\").and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "club_id zero (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": 0,\n  \"loyalty_until\": \"{{fidelidade}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clube inexistente (404)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": 999999,\n  \"loyalty_until\": \"{{fidelidade}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Data sem o -03:00 (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": {{clube_id}},\n  \"loyalty_until\": \"2027-03-02T10:15\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Data inexistente (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": {{clube_id}},\n  \"loyalty_until\": \"2027-02-30T10:15-03:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fidelidade no passado (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": {{clube_id}},\n  \"loyalty_until\": \"{{fidelidade_passada}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fidelidade acima de 1.095 dias (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": {{clube_id}},\n  \"loyalty_until\": \"{{fidelidade_longa}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comprar jogador excluído (404)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{excluir_id}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{excluir_id}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": {{clube_id}},\n  \"loyalty_until\": \"{{fidelidade}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mudar posição de jogador com clube (409)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meia Lua\",\n  \"position\": \"ATA\",\n  \"agility\": 85,\n  \"age\": 26\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir jogador com clube (409)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar jogadores do clube (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players?club_id={{clube_id}}&free=false",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                {
+                  "key": "club_id",
+                  "value": "{{clube_id}}"
+                },
+                {
+                  "key": "free",
+                  "value": "false"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"meta.total_items = 1\", () => pm.expect(pm.response.json().meta.total_items).to.eql(1));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "9. Venda",
+      "item": [
+        {
+          "name": "Vender jogador (200, multa de 10%)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/sell",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "sell"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"type = VENDA\", () => pm.expect(pm.response.json().type).to.eql(\"VENDA\"));",
+                  "pm.test(\"value = 40\", () => pm.expect(pm.response.json().value).to.eql(40));",
+                  "pm.test(\"purchase_value = 40\", () => pm.expect(pm.response.json().purchase_value).to.eql(40));",
+                  "pm.test(\"remaining_days = 120\", () => pm.expect(pm.response.json().remaining_days).to.eql(120));",
+                  "pm.test(\"penalty_rate = 10\", () => pm.expect(pm.response.json().penalty_rate).to.eql(10));",
+                  "pm.test(\"penalty = 4\", () => pm.expect(pm.response.json().penalty).to.eql(4));",
+                  "pm.test(\"profit = 0\", () => pm.expect(pm.response.json().profit).to.eql(0));",
+                  "pm.test(\"fee = 0\", () => pm.expect(pm.response.json().fee).to.eql(0));",
+                  "pm.test(\"cash_change = 36\", () => pm.expect(pm.response.json().cash_change).to.eql(36));",
+                  "pm.test(\"contract_status = RESCINDIDO\", () => pm.expect(pm.response.json().contract_status).to.eql(\"RESCINDIDO\"));",
+                  "pm.test(\"club_cash = 294\", () => pm.expect(pm.response.json().club_cash).to.eql(294));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Vender jogador livre (409)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/sell",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "sell"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Vender jogador excluído (404)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/{{excluir_id}}/sell",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{excluir_id}}",
+                "sell"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clube que vendeu não recompra (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": {{clube_id}},\n  \"loyalty_until\": \"{{fidelidade}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Outro clube pode comprar (200)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{player_id}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": {{clube2_id}},\n  \"loyalty_until\": \"{{fidelidade}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"club_cash = 258\", () => pm.expect(pm.response.json().club_cash).to.eql(258));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "10. Histórico e exportação",
+      "item": [
+        {
+          "name": "Histórico completo (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/transactions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "transactions"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"VENDA antes da COMPRA\", () => pm.expect(pm.response.json().data.map(t => t.type)).to.eql([\"VENDA\", \"COMPRA\"]));",
+                  "pm.test(\"summary.total_spent = 42\", () => pm.expect(pm.response.json().summary.total_spent).to.eql(42));",
+                  "pm.test(\"summary.total_received = 36\", () => pm.expect(pm.response.json().summary.total_received).to.eql(36));",
+                  "pm.test(\"summary.total_fees = 2\", () => pm.expect(pm.response.json().summary.total_fees).to.eql(2));",
+                  "pm.test(\"summary.total_penalties = 4\", () => pm.expect(pm.response.json().summary.total_penalties).to.eql(4));",
+                  "pm.test(\"summary.total_profit = 0\", () => pm.expect(pm.response.json().summary.total_profit).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtro por tipo (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/transactions?type=VENDA",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "VENDA"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"summary.total_spent = 0\", () => pm.expect(pm.response.json().summary.total_spent).to.eql(0));",
+                  "pm.test(\"summary.total_received = 36\", () => pm.expect(pm.response.json().summary.total_received).to.eql(36));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtro por tipos e jogador (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/transactions?type=COMPRA,VENDA&player_id={{player_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "COMPRA,VENDA"
+                },
+                {
+                  "key": "player_id",
+                  "value": "{{player_id}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tipo em minúsculas (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/transactions?type=venda",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "venda"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tipo repetido (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/transactions?type=VENDA,VENDA",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "VENDA,VENDA"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Jogador excluído no filtro (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/transactions?player_id={{excluir_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "player_id",
+                  "value": "{{excluir_id}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clube inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs/999999/transactions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "999999",
+                "transactions"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Exportar CSV (200, text/csv)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/transactions/export",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "transactions",
+                "export"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Content-Type text/csv\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/csv\"));",
+                  "pm.test(\"Cabeçalho e duas linhas\", () => { const linhas = pm.response.text().split(\"\\n\"); pm.expect(linhas[0]).to.eql(\"data_hora;tipo;jogador;valor;taxa_ou_comissao;multa;lucro;variacao_caixa\"); pm.expect(linhas.length).to.eql(4); pm.expect(linhas[3]).to.eql(\"\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Exportar só as vendas (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/transactions/export?type=VENDA",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "transactions",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "VENDA"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Exportar com filtro inválido (400, erro em JSON)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/transactions/export?type=x",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "transactions",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "x"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Corpo de erro tem message\", () => pm.expect(pm.response.json().message).to.be.a(\"string\").and.not.empty);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "11. Escalação",
+      "item": [
+        {
+          "name": "Cadastrar Rui Prado (GOL)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rui Prado\",\n  \"position\": \"GOL\",\n  \"agility\": 50,\n  \"age\": 25,\n  \"pace\": 50,\n  \"shooting\": 50,\n  \"passing\": 50,\n  \"dribbling\": 50,\n  \"defending\": 77,\n  \"physical\": 50,\n  \"potential\": 90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"aguias_gol\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comprar Rui Prado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{aguias_gol}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{aguias_gol}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": {{clube_id}},\n  \"loyalty_until\": \"{{fidelidade}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cadastrar Téo Brandão (ZAG)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Téo Brandão\",\n  \"position\": \"ZAG\",\n  \"agility\": 50,\n  \"age\": 25,\n  \"pace\": 50,\n  \"shooting\": 50,\n  \"passing\": 50,\n  \"dribbling\": 50,\n  \"defending\": 84,\n  \"physical\": 50,\n  \"potential\": 90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"aguias_zag\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comprar Téo Brandão",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{aguias_zag}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{aguias_zag}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": {{clube_id}},\n  \"loyalty_until\": \"{{fidelidade}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cadastrar Davi Lins (LAT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Davi Lins\",\n  \"position\": \"LAT\",\n  \"agility\": 50,\n  \"age\": 25,\n  \"pace\": 50,\n  \"shooting\": 50,\n  \"passing\": 50,\n  \"dribbling\": 74,\n  \"defending\": 66,\n  \"physical\": 50,\n  \"potential\": 90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"aguias_lat\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comprar Davi Lins",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{aguias_lat}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{aguias_lat}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": {{clube_id}},\n  \"loyalty_until\": \"{{fidelidade}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cadastrar Lauro Neves (MEI)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lauro Neves\",\n  \"position\": \"MEI\",\n  \"agility\": 50,\n  \"age\": 25,\n  \"pace\": 50,\n  \"shooting\": 50,\n  \"passing\": 82,\n  \"dribbling\": 50,\n  \"defending\": 50,\n  \"physical\": 50,\n  \"potential\": 90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"aguias_mei\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comprar Lauro Neves",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{aguias_mei}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{aguias_mei}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": {{clube_id}},\n  \"loyalty_until\": \"{{fidelidade}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cadastrar Otto Rangel (ATA)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Otto Rangel\",\n  \"position\": \"ATA\",\n  \"agility\": 50,\n  \"age\": 25,\n  \"pace\": 50,\n  \"shooting\": 75,\n  \"passing\": 50,\n  \"dribbling\": 50,\n  \"defending\": 50,\n  \"physical\": 50,\n  \"potential\": 90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"aguias_ata\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comprar Otto Rangel",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{aguias_ata}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{aguias_ata}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": {{clube_id}},\n  \"loyalty_until\": \"{{fidelidade}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cadastrar Ivo Teles (GOL)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ivo Teles\",\n  \"position\": \"GOL\",\n  \"agility\": 50,\n  \"age\": 25,\n  \"pace\": 50,\n  \"shooting\": 50,\n  \"passing\": 50,\n  \"dribbling\": 50,\n  \"defending\": 72,\n  \"physical\": 50,\n  \"potential\": 90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"delta_gol\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comprar Ivo Teles",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{delta_gol}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{delta_gol}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": {{clube2_id}},\n  \"loyalty_until\": \"{{fidelidade}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cadastrar Hugo Vaz (ZAG)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Hugo Vaz\",\n  \"position\": \"ZAG\",\n  \"agility\": 50,\n  \"age\": 25,\n  \"pace\": 50,\n  \"shooting\": 50,\n  \"passing\": 50,\n  \"dribbling\": 50,\n  \"defending\": 84,\n  \"physical\": 50,\n  \"potential\": 90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"delta_zag\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comprar Hugo Vaz",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{delta_zag}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{delta_zag}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": {{clube2_id}},\n  \"loyalty_until\": \"{{fidelidade}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cadastrar Lino Matos (LAT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lino Matos\",\n  \"position\": \"LAT\",\n  \"agility\": 50,\n  \"age\": 25,\n  \"pace\": 50,\n  \"shooting\": 50,\n  \"passing\": 50,\n  \"dribbling\": 79,\n  \"defending\": 63,\n  \"physical\": 50,\n  \"potential\": 90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"delta_lat\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comprar Lino Matos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{delta_lat}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{delta_lat}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": {{clube2_id}},\n  \"loyalty_until\": \"{{fidelidade}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cadastrar Ugo Falcão (ATA)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ugo Falcão\",\n  \"position\": \"ATA\",\n  \"agility\": 50,\n  \"age\": 25,\n  \"pace\": 50,\n  \"shooting\": 81,\n  \"passing\": 50,\n  \"dribbling\": 50,\n  \"defending\": 50,\n  \"physical\": 50,\n  \"potential\": 90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"delta_ata\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comprar Ugo Falcão",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{delta_ata}}/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{delta_ata}}",
+                "buy"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": {{clube2_id}},\n  \"loyalty_until\": \"{{fidelidade}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar sem escalação (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/lineup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "lineup"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"formation = None\", () => pm.expect(pm.response.json().formation).to.eql(null));",
+                  "pm.test(\"complete = False\", () => pm.expect(pm.response.json().complete).to.eql(false));",
+                  "pm.test(\"Sem titulares\", () => pm.expect(pm.response.json().players).to.be.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Escalar Águias FC no 2-1-1, em qualquer ordem (200)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/lineup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "lineup"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"formation\": \"2-1-1\",\n  \"player_ids\": [{{aguias_ata}}, {{aguias_lat}}, {{aguias_gol}}, {{aguias_mei}}, {{aguias_zag}}]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"formation = 2-1-1\", () => pm.expect(pm.response.json().formation).to.eql(\"2-1-1\"));",
+                  "pm.test(\"complete = True\", () => pm.expect(pm.response.json().complete).to.eql(true));",
+                  "pm.test(\"Ordem do elenco\", () => pm.expect(pm.response.json().players.map(j => j.position)).to.eql([\"GOL\", \"ZAG\", \"LAT\", \"MEI\", \"ATA\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Escalar Delta FC no 2-1-1 (200)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube2_id}}/lineup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube2_id}}",
+                "lineup"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"formation\": \"2-1-1\",\n  \"player_ids\": [{{delta_gol}}, {{delta_zag}}, {{delta_lat}}, {{player_id}}, {{delta_ata}}]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"complete = True\", () => pm.expect(pm.response.json().complete).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Formação fora da lista (400)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/lineup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "lineup"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"formation\": \"4-0\",\n  \"player_ids\": [{{aguias_gol}}, {{aguias_zag}}, {{aguias_lat}}, {{aguias_mei}}, {{aguias_ata}}]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Corpo de erro tem message\", () => pm.expect(pm.response.json().message).to.be.a(\"string\").and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quatro titulares (400)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/lineup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "lineup"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"formation\": \"2-1-1\",\n  \"player_ids\": [{{aguias_gol}}, {{aguias_zag}}, {{aguias_lat}}, {{aguias_mei}}]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Id repetido (400)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/lineup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "lineup"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"formation\": \"2-1-1\",\n  \"player_ids\": [{{aguias_gol}}, {{aguias_zag}}, {{aguias_lat}}, {{aguias_mei}}, {{aguias_mei}}]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Jogador inexistente (404)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/lineup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "lineup"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"formation\": \"2-1-1\",\n  \"player_ids\": [{{aguias_gol}}, {{aguias_zag}}, {{aguias_lat}}, {{aguias_mei}}, 999999]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Jogador de outro clube (409)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/lineup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "lineup"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"formation\": \"2-1-1\",\n  \"player_ids\": [{{aguias_gol}}, {{aguias_zag}}, {{aguias_lat}}, {{aguias_mei}}, {{delta_ata}}]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Posições que não fecham a formação (409)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/lineup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "lineup"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"formation\": \"3-1\",\n  \"player_ids\": [{{aguias_gol}}, {{aguias_zag}}, {{aguias_lat}}, {{aguias_mei}}, {{aguias_ata}}]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Corpo de erro tem message\", () => pm.expect(pm.response.json().message).to.be.a(\"string\").and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Escalação continua a mesma depois das recusas (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/lineup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "lineup"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"formation = 2-1-1\", () => pm.expect(pm.response.json().formation).to.eql(\"2-1-1\"));",
+                  "pm.test(\"complete = True\", () => pm.expect(pm.response.json().complete).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "12. Partidas",
+      "item": [
+        {
+          "name": "Davi Lins fica MAL_CONDICIONADO (200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/players/{{aguias_lat}}/condition",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{aguias_lat}}",
+                "condition"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"condition\": \"MAL_CONDICIONADO\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Jogar Águias FC x Delta FC (201, exemplo da RN20)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/matches",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"home_club_id\": {{clube_id}},\n  \"away_club_id\": {{clube2_id}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Tem Location\", () => pm.expect(pm.response.headers.get(\"Location\")).to.match(/\\/api\\/v1\\/matches\\/\\d+$/));",
+                  "pm.test(\"home.goals = 1\", () => pm.expect(pm.response.json().home.goals).to.eql(1));",
+                  "pm.test(\"away.goals = 2\", () => pm.expect(pm.response.json().away.goals).to.eql(2));",
+                  "pm.test(\"result = VISITANTE\", () => pm.expect(pm.response.json().result).to.eql(\"VISITANTE\"));",
+                  "pm.test(\"Gols por duelo\", () => pm.expect(pm.response.json().duels.map(d => d.goal)).to.eql([true, false, false, true, false, true]));",
+                  "pm.test(\"duels[2].attacker.value = 63\", () => pm.expect(pm.response.json().duels[2].attacker.value).to.eql(63));",
+                  "pm.test(\"duels[5].defender.value = 56\", () => pm.expect(pm.response.json().duels[5].defender.value).to.eql(56));",
+                  "pm.collectionVariables.set(\"partida_id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mandante igual ao visitante (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/matches",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"home_club_id\": {{clube_id}},\n  \"away_club_id\": {{clube_id}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Corpo de erro tem message\", () => pm.expect(pm.response.json().message).to.be.a(\"string\").and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clube inexistente (404)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/matches",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"home_club_id\": {{clube_id}},\n  \"away_club_id\": 999999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar Gama SC, sem escalação (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clubs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Gama SC\",\n  \"acronym\": \"GSC\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"clube3_id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clube sem escalação completa (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/matches",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"home_club_id\": {{clube_id}},\n  \"away_club_id\": {{clube3_id}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Histórico de partidas (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/matches",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Sem duels na lista\", () => pm.expect(pm.response.json()[0]).to.not.have.property(\"duels\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Partidas do clube (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/matches?club_id={{clube_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches"
+              ],
+              "query": [
+                {
+                  "key": "club_id",
+                  "value": "{{clube_id}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtro com clube inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/matches?club_id=999999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches"
+              ],
+              "query": [
+                {
+                  "key": "club_id",
+                  "value": "999999"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar partida com os 6 duelos (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/matches/{{partida_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches",
+                "{{partida_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"6 duelos em ordem\", () => pm.expect(pm.response.json().duels.map(d => d.order)).to.eql([1, 2, 3, 4, 5, 6]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Partida inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/matches/999999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Vender o atacante titular (200)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/players/{{aguias_ata}}/sell",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "{{aguias_ata}}",
+                "sell"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Escalação fica incompleta, com a mesma formação (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clubs/{{clube_id}}/lineup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs",
+                "{{clube_id}}",
+                "lineup"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"formation = 2-1-1\", () => pm.expect(pm.response.json().formation).to.eql(\"2-1-1\"));",
+                  "pm.test(\"complete = False\", () => pm.expect(pm.response.json().complete).to.eql(false));",
+                  "pm.test(\"4 titulares\", () => pm.expect(pm.response.json().players).to.have.lengthOf(4));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clube com escalação incompleta não joga (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/matches",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"home_club_id\": {{clube_id}},\n  \"away_club_id\": {{clube2_id}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "13. Classificação",
+      "item": [
+        {
+          "name": "Classificação (200, exemplo 2.4.3)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/standings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "standings"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Delta, Gama e Águias\", () => pm.expect(pm.response.json().map(c => c.club_name)).to.eql([\"Delta FC\", \"Gama SC\", \"Águias FC\"]));",
+                  "pm.test(\"[0].points = 3\", () => pm.expect(pm.response.json()[0].points).to.eql(3));",
+                  "pm.test(\"[0].goal_difference = 1\", () => pm.expect(pm.response.json()[0].goal_difference).to.eql(1));",
+                  "pm.test(\"[2].losses = 1\", () => pm.expect(pm.response.json()[2].losses).to.eql(1));",
+                  "pm.test(\"Posições de 1 a 3\", () => pm.expect(pm.response.json().map(c => c.position)).to.eql([1, 2, 3]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

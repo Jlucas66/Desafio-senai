@@ -16,3 +16,4 @@ frontend/out/
 .vscode/
 *.iml
 .DS_Store
+CLAUDE.md

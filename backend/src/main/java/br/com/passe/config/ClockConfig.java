@@ -1,18 +1,17 @@
 package br.com.passe.config;
 
 import java.time.Clock;
-import java.time.ZoneOffset;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import br.com.passe.common.datahora.DataHora;
+
 @Configuration
 public class ClockConfig {
 
-    private static final ZoneOffset BRASILIA = ZoneOffset.ofHours(-3);
-
     @Bean
     public Clock clock() {
-        return Clock.system(BRASILIA);
+        return Clock.system(DataHora.BRASILIA);
     }
 }
