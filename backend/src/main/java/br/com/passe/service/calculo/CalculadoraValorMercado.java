@@ -19,8 +19,7 @@ public final class CalculadoraValorMercado {
     private static final int IDADE_MINIMA_SEM_AJUSTE = 22;
     private static final int IDADE_MAXIMA_SEM_AJUSTE = 31;
 
-    private CalculadoraValorMercado() {
-    }
+    private CalculadoraValorMercado() {}
 
     public static BigDecimal calcular(Jogador jogador) {
         return calcular(jogador.getValorBase(), jogador.getCondicao(), jogador.getAgilidade(), jogador.getIdade());
@@ -35,11 +34,12 @@ public final class CalculadoraValorMercado {
     }
 
     private static BigDecimal descontoPorCondicao(Condicao condicao, int agilidade) {
-        BigDecimal desconto = switch (condicao) {
-            case APTO -> BigDecimal.ZERO;
-            case MAL_CONDICIONADO -> BigDecimal.valueOf(15);
-            case DOENTE -> BigDecimal.valueOf(30);
-        };
+        BigDecimal desconto =
+                switch (condicao) {
+                    case APTO -> BigDecimal.ZERO;
+                    case MAL_CONDICIONADO -> BigDecimal.valueOf(15);
+                    case DOENTE -> BigDecimal.valueOf(30);
+                };
         if (condicao == Condicao.APTO) {
             return desconto;
         }

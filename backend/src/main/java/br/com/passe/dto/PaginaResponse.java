@@ -4,8 +4,7 @@ import java.util.List;
 
 public record PaginaResponse<T>(List<T> data, Meta meta) {
 
-    public record Meta(int page, int limit, int totalItems, int totalPages) {
-    }
+    public record Meta(int page, int limit, int totalItems, int totalPages) {}
 
     public static <T> PaginaResponse<T> de(List<T> itens, int pagina, int limite) {
         int totalItens = itens.size();

@@ -13,8 +13,7 @@ import br.com.passe.model.Posicao;
  */
 public final class CalculadoraOverall {
 
-    private record Pesos(int velocidade, int finalizacao, int passe, int drible, int defesa, int fisico) {
-    }
+    private record Pesos(int velocidade, int finalizacao, int passe, int drible, int defesa, int fisico) {}
 
     private static final Map<Posicao, Pesos> PESOS_POR_POSICAO = new EnumMap<>(Map.of(
             Posicao.GOL, new Pesos(10, 0, 20, 0, 40, 30),
@@ -23,8 +22,7 @@ public final class CalculadoraOverall {
             Posicao.MEI, new Pesos(10, 15, 35, 25, 5, 10),
             Posicao.ATA, new Pesos(20, 40, 10, 20, 0, 10)));
 
-    private CalculadoraOverall() {
-    }
+    private CalculadoraOverall() {}
 
     public static int calcular(Posicao posicao, Atributos atributos) {
         Pesos pesos = PESOS_POR_POSICAO.get(posicao);

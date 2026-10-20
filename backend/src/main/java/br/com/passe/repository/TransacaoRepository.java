@@ -12,7 +12,8 @@ public interface TransacaoRepository extends JpaRepository<Transacao, Integer> {
 
     boolean existsByClubeIdAndJogadorIdAndTipo(Integer clubeId, Integer jogadorId, TipoTransacao tipo);
 
-    List<Transacao> findAllByClubeIdAndTipoInOrderByCriadoEmDescIdDesc(Integer clubeId, Collection<TipoTransacao> tipos);
+    List<Transacao> findAllByClubeIdAndTipoInOrderByCriadoEmDescIdDesc(
+            Integer clubeId, Collection<TipoTransacao> tipos);
 
     List<Transacao> findAllByClubeIdAndJogadorIdAndTipoInOrderByCriadoEmDescIdDesc(
             Integer clubeId, Integer jogadorId, Collection<TipoTransacao> tipos);

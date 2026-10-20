@@ -22,12 +22,12 @@ class MercadoApiTest extends ApiTest {
 
     @ParameterizedTest(name = "caixa {0}, valor {1} -> {2}")
     @CsvSource({
-            "300.00, 28.00, 200",
-            "300.00, 30.00, 200",
-            "300.00, 30.01, 200",
-            "100.00, 47.62, 200",
-            "100.00, 48.00, 409",
-            "261.15, 124.36, 409"
+        "300.00, 28.00, 200",
+        "300.00, 30.00, 200",
+        "300.00, 30.01, 200",
+        "100.00, 47.62, 200",
+        "100.00, 48.00, 409",
+        "261.15, 124.36, 409"
     })
     void limiteDeCinquentaPorCentoDoCaixaSemArredondar(String caixa, String valor, int esperado) throws Exception {
         int clube = criarClubePelaApi("Águias FC", "AGU");
@@ -45,11 +45,15 @@ class MercadoApiTest extends ApiTest {
         definirCaixa(clube, "100.00");
         definirValorBase(jogador, "48.00");
 
-        comprar(jogador, clube, FIDELIDADE).andExpect(status().isConflict()).andExpect(jsonPath("$.message").isNotEmpty());
+        comprar(jogador, clube, FIDELIDADE)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").isNotEmpty());
 
         mockMvc.perform(get("/clubs/" + clube)).andExpect(jsonPath("$.cash").value(100.00));
-        mockMvc.perform(get("/players/" + jogador)).andExpect(jsonPath("$.club_id").isEmpty());
-        mockMvc.perform(get("/clubs/" + clube + "/transactions")).andExpect(jsonPath("$.data").isEmpty());
+        mockMvc.perform(get("/players/" + jogador))
+                .andExpect(jsonPath("$.club_id").isEmpty());
+        mockMvc.perform(get("/clubs/" + clube + "/transactions"))
+                .andExpect(jsonPath("$.data").isEmpty());
     }
 
     @Test
@@ -107,21 +111,32 @@ class MercadoApiTest extends ApiTest {
         comprar(jogador, 99, FIDELIDADE).andExpect(status().isNotFound());
         comprar(jogador, 0, FIDELIDADE).andExpect(status().isBadRequest());
         comprar(jogador, -1, FIDELIDADE).andExpect(status().isBadRequest());
-        enviar(post("/players/" + jogador + "/buy"), Map.of("loyalty_until", FIDELIDADE)).andExpect(status().isBadRequest());
+        enviar(post("/players/" + jogador + "/buy"), Map.of("loyalty_until", FIDELIDADE))
+                .andExpect(status().isBadRequest());
         enviar(post("/players/" + jogador + "/buy"), Map.of("club_id", "1", "loyalty_until", FIDELIDADE))
                 .andExpect(status().isBadRequest());
         enviar(post("/players/" + jogador + "/buy"), "[]").andExpect(status().isBadRequest());
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"2027-03-02T10:15", "2027-03-02T10:15:00-03:00", "2027-03-02T10:15Z", "2027-02-30T10:15-03:00",
-            "2027-03-02T24:00-03:00", "2026-11-02T10:15-03:00", "2026-11-01T10:15-03:00", "2029-11-01T10:16-03:00"})
+    @ValueSource(
+            strings = {
+                "2027-03-02T10:15",
+                "2027-03-02T10:15:00-03:00",
+                "2027-03-02T10:15Z",
+                "2027-02-30T10:15-03:00",
+                "2027-03-02T24:00-03:00",
+                "2026-11-02T10:15-03:00",
+                "2026-11-01T10:15-03:00",
+                "2029-11-01T10:16-03:00"
+            })
     void recusaFimDaFidelidadeInvalido(String fimDaFidelidade) throws Exception {
         int clube = criarClubePelaApi("Águias FC", "AGU");
         int jogador = cadastrarJogador(jogadorValido());
 
         comprar(jogador, clube, fimDaFidelidade).andExpect(status().isBadRequest());
-        mockMvc.perform(get("/players/" + jogador)).andExpect(jsonPath("$.club_id").isEmpty());
+        mockMvc.perform(get("/players/" + jogador))
+                .andExpect(jsonPath("$.club_id").isEmpty());
     }
 
     @ParameterizedTest
@@ -164,7 +179,8 @@ class MercadoApiTest extends ApiTest {
         int clube = criarClubePelaApi("Águias FC", "AGU");
         int jogador = cadastrarJogador(jogadorValido());
         definirValorBase(jogador, "60.00");
-        comprar(jogador, clube, "2027-11-02T10:15-03:00").andExpect(jsonPath("$.club_cash").value(237.00));
+        comprar(jogador, clube, "2027-11-02T10:15-03:00")
+                .andExpect(jsonPath("$.club_cash").value(237.00));
         definirValorBase(jogador, "75.00");
 
         vender(jogador)
@@ -208,6 +224,7 @@ class MercadoApiTest extends ApiTest {
                 .andExpect(jsonPath("$.squad_value").value(134.00))
                 .andExpect(jsonPath("$.cash").value(160.30))
                 .andExpect(jsonPath("$.net_worth").value(294.30));
-        mockMvc.perform(get("/players").param("club_id", "" + clube)).andExpect(jsonPath("$.meta.total_items").value(4));
+        mockMvc.perform(get("/players").param("club_id", "" + clube))
+                .andExpect(jsonPath("$.meta.total_items").value(4));
     }
 }

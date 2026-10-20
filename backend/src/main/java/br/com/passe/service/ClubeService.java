@@ -84,9 +84,9 @@ public class ClubeService {
         List<Jogador> elenco = jogadorRepository.findAllByClubeId(id).stream()
                 .sorted(JogadorMapper.ORDEM_DO_ELENCO)
                 .toList();
-        Map<Integer, Contrato> contratos = contratoRepository.findAllByClubeIdAndSituacao(id, SituacaoContrato.ATIVO)
-                .stream()
-                .collect(Collectors.toMap(Contrato::getJogadorId, Function.identity()));
+        Map<Integer, Contrato> contratos =
+                contratoRepository.findAllByClubeIdAndSituacao(id, SituacaoContrato.ATIVO).stream()
+                        .collect(Collectors.toMap(Contrato::getJogadorId, Function.identity()));
         OffsetDateTime agora = OffsetDateTime.now(clock);
 
         List<JogadorElencoResponse> jogadores = elenco.stream()
@@ -98,25 +98,34 @@ public class ClubeService {
     }
 
     private ClubeResponse paraResponse(Clube clube, List<Jogador> elenco) {
-        BigDecimal valorDoElenco = Moedas.arredondar(elenco.stream()
-                .map(CalculadoraValorMercado::calcular)
-                .reduce(BigDecimal.ZERO, BigDecimal::add));
-        return new ClubeResponse(clube.getId(), clube.getNome(), clube.getSigla(), clube.getCaixa(),
-                valorDoElenco, clube.getCaixa().add(valorDoElenco));
+        BigDecimal valorDoElenco = Moedas.arredondar(
+                elenco.stream().map(CalculadoraValorMercado::calcular).reduce(BigDecimal.ZERO, BigDecimal::add));
+        return new ClubeResponse(
+                clube.getId(),
+                clube.getNome(),
+                clube.getSigla(),
+                clube.getCaixa(),
+                valorDoElenco,
+                clube.getCaixa().add(valorDoElenco));
     }
 
     private static ContratoElencoResponse paraContratoDoElenco(Contrato contrato, OffsetDateTime agora) {
         int diasRestantes = CalculadoraMulta.diasRestantes(contrato.getFidelidadeAte(), agora);
-        return new ContratoElencoResponse(contrato.getValorCompra(), contrato.getFidelidadeAte(), diasRestantes,
+        return new ContratoElencoResponse(
+                contrato.getValorCompra(),
+                contrato.getFidelidadeAte(),
+                diasRestantes,
                 CalculadoraMulta.percentual(diasRestantes));
     }
 
     private static Comparator<ClubeResponse> comparadorDe(OrdenacaoClubes ordenacao) {
-        Comparator<ClubeResponse> criterio = switch (ordenacao) {
-            case NAME -> POR_NOME;
-            case NET_WORTH_ASC -> Comparator.comparing(ClubeResponse::netWorth);
-            case NET_WORTH_DESC -> Comparator.comparing(ClubeResponse::netWorth).reversed();
-        };
+        Comparator<ClubeResponse> criterio =
+                switch (ordenacao) {
+                    case NAME -> POR_NOME;
+                    case NET_WORTH_ASC -> Comparator.comparing(ClubeResponse::netWorth);
+                    case NET_WORTH_DESC ->
+                        Comparator.comparing(ClubeResponse::netWorth).reversed();
+                };
         return criterio.thenComparing(DESEMPATE);
     }
 }

@@ -74,9 +74,13 @@ class JogadorListagemApiTest extends ApiTest {
         cadastrarJogador(com(jogadorValido(), "position", "ATA"));
         enviar(patch("/players/" + meia + "/condition"), Map.of("condition", "MAL_CONDICIONADO"));
 
-        mockMvc.perform(get("/players").param("position", "MEI").param("condition", "MAL_CONDICIONADO")
-                        .param("min_age", "20").param("max_age", "25")
-                        .param("min_value", "37").param("max_value", "37.00"))
+        mockMvc.perform(get("/players")
+                        .param("position", "MEI")
+                        .param("condition", "MAL_CONDICIONADO")
+                        .param("min_age", "20")
+                        .param("max_age", "25")
+                        .param("min_value", "37")
+                        .param("max_value", "37.00"))
                 .andExpect(jsonPath("$.data[*].id", contains(meia)));
         mockMvc.perform(get("/players").param("max_value", "37"))
                 .andExpect(jsonPath("$.meta.total_items").value(2));
@@ -106,8 +110,7 @@ class JogadorListagemApiTest extends ApiTest {
         int clube = criarClube("Águias FC", "AGF");
         colocarNoClube(contratado, clube);
 
-        mockMvc.perform(get("/players").param("free", "true"))
-                .andExpect(jsonPath("$.data[*].id", contains(livre)));
+        mockMvc.perform(get("/players").param("free", "true")).andExpect(jsonPath("$.data[*].id", contains(livre)));
         mockMvc.perform(get("/players").param("free", "false"))
                 .andExpect(jsonPath("$.data[*].id", contains(contratado)));
         mockMvc.perform(get("/players").param("club_id", "" + clube).param("free", "false"))
@@ -116,15 +119,39 @@ class JogadorListagemApiTest extends ApiTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {
-            "position=", "position=mei", "condition=apto", "free=TRUE", "free=1",
-            "club_id=0", "club_id=01", "club_id=abc", "page=0", "page=-1", "limit=51", "limit=0", "limit=1.0",
-            "min_age=15", "max_age=46", "min_age=30&max_age=20",
-            "min_value=-1", "min_value=10.555", "min_value=1e2", "min_value=01", "min_value=10,5", "max_value=550.01",
-            "min_value=50&max_value=40", "free=true&club_id=1",
-            "sort=POSITION", "sort=value_asc,value_desc", "sort=name,age_asc,position", "sort=name,", "sort=name, age_asc",
-            "search=a"
-    })
+    @ValueSource(
+            strings = {
+                "position=",
+                "position=mei",
+                "condition=apto",
+                "free=TRUE",
+                "free=1",
+                "club_id=0",
+                "club_id=01",
+                "club_id=abc",
+                "page=0",
+                "page=-1",
+                "limit=51",
+                "limit=0",
+                "limit=1.0",
+                "min_age=15",
+                "max_age=46",
+                "min_age=30&max_age=20",
+                "min_value=-1",
+                "min_value=10.555",
+                "min_value=1e2",
+                "min_value=01",
+                "min_value=10,5",
+                "max_value=550.01",
+                "min_value=50&max_value=40",
+                "free=true&club_id=1",
+                "sort=POSITION",
+                "sort=value_asc,value_desc",
+                "sort=name,age_asc,position",
+                "sort=name,",
+                "sort=name, age_asc",
+                "search=a"
+            })
     void recusaParametroInvalidoOuContraditorio(String consulta) throws Exception {
         criarClube("Águias FC", "AGF");
 
@@ -140,6 +167,7 @@ class JogadorListagemApiTest extends ApiTest {
     @Test
     void aceitaLimitesDosParametros() throws Exception {
         mockMvc.perform(get("/players?min_value=0.5&max_value=550&min_age=16&max_age=45&limit=50&search=ab"
-                + "&sort=value_asc,name&parametro_desconhecido=x")).andExpect(status().isOk());
+                        + "&sort=value_asc,name&parametro_desconhecido=x"))
+                .andExpect(status().isOk());
     }
 }

@@ -7,6 +7,5 @@ public final class Rotas {
      */
     public static final String ID = "/{id:[1-9][0-9]*}";
 
-    private Rotas() {
-    }
+    private Rotas() {}
 }

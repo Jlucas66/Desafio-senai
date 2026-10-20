@@ -17,8 +17,8 @@ import jakarta.validation.Payload;
 @Constraint(validatedBy = NomeDeClubeValidator.class)
 public @interface NomeDeClube {
 
-    String message() default "name deve ter de 3 a 60 caracteres, de 2 a 5 palavras e só letras, espaços, "
-            + "hífen e ponto.";
+    String message() default
+            "name deve ter de 3 a 60 caracteres, de 2 a 5 palavras e só letras, espaços, hífen e ponto.";
 
     Class<?>[] groups() default {};
 

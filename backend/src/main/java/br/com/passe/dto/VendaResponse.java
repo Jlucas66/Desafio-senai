@@ -12,5 +12,4 @@ public record VendaResponse(
         int remainingDays,
         int penaltyRate,
         SituacaoContrato contractStatus,
-        BigDecimal clubCash) {
-}
+        BigDecimal clubCash) {}

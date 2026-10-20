@@ -153,7 +153,8 @@ public class JogadorService {
         return switch (criterio) {
             case NAME -> POR_NOME;
             case VALUE_ASC -> Comparator.comparing(JogadorResponse::marketValue);
-            case VALUE_DESC -> Comparator.comparing(JogadorResponse::marketValue).reversed();
+            case VALUE_DESC ->
+                Comparator.comparing(JogadorResponse::marketValue).reversed();
             case AGE_ASC -> Comparator.comparing(JogadorResponse::age);
             case AGE_DESC -> Comparator.comparing(JogadorResponse::age).reversed();
             case POSITION -> Comparator.comparing(JogadorResponse::position);

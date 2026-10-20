@@ -15,10 +15,12 @@ public record FiltroTransacoes(List<TipoTransacao> tipos, Integer jogadorId) {
     private static final String PARAMETRO_TIPO = "type";
 
     public static FiltroTransacoes de(ParametrosConsulta parametros) {
-        List<TipoTransacao> tipos = parametros.texto(PARAMETRO_TIPO)
+        List<TipoTransacao> tipos = parametros
+                .texto(PARAMETRO_TIPO)
                 .map(FiltroTransacoes::lerTipos)
                 .orElse(List.of(TipoTransacao.values()));
-        return new FiltroTransacoes(tipos, parametros.inteiroPositivo("player_id").orElse(null));
+        return new FiltroTransacoes(
+                tipos, parametros.inteiroPositivo("player_id").orElse(null));
     }
 
     private static List<TipoTransacao> lerTipos(String valor) {

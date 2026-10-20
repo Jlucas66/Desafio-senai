@@ -17,7 +17,8 @@ import br.com.passe.ApiTest;
 
 class JogadorAlteracaoApiTest extends ApiTest {
 
-    private static final String EDICAO = """
+    private static final String EDICAO =
+            """
             {"name": "Davi Melo", "position": "ATA", "agility": 70, "age": 26}
             """;
 
@@ -25,7 +26,9 @@ class JogadorAlteracaoApiTest extends ApiTest {
     void editaSoNomePosicaoAgilidadeEIdade() throws Exception {
         int id = cadastrarJogador(jogadorValido());
 
-        enviar(put("/players/" + id), """
+        enviar(
+                        put("/players/" + id),
+                        """
                 {"name": "Davi Melo", "position": "ATA", "agility": 70, "age": 26,
                  "pace": 99, "potential": 99, "base_value": 1, "condition": "DOENTE"}
                 """)
@@ -72,7 +75,9 @@ class JogadorAlteracaoApiTest extends ApiTest {
     void alteraCondicaoERecalculaValorDeMercado() throws Exception {
         int id = cadastrarJogador(jogadorValido());
 
-        enviar(patch("/players/" + id + "/condition"), "{\"condition\": \"MAL_CONDICIONADO\", \"name\": \"Outro Nome\"}")
+        enviar(
+                        patch("/players/" + id + "/condition"),
+                        "{\"condition\": \"MAL_CONDICIONADO\", \"name\": \"Outro Nome\"}")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.condition").value("MAL_CONDICIONADO"))
                 .andExpect(jsonPath("$.market_value").value(37.00))
@@ -82,12 +87,15 @@ class JogadorAlteracaoApiTest extends ApiTest {
     @Test
     void doenteNaoVaiDiretoParaApto() throws Exception {
         int id = cadastrarJogador(jogadorValido());
-        enviar(patch("/players/" + id + "/condition"), Map.of("condition", "DOENTE")).andExpect(status().isOk());
+        enviar(patch("/players/" + id + "/condition"), Map.of("condition", "DOENTE"))
+                .andExpect(status().isOk());
 
-        enviar(patch("/players/" + id + "/condition"), Map.of("condition", "APTO")).andExpect(status().isConflict());
+        enviar(patch("/players/" + id + "/condition"), Map.of("condition", "APTO"))
+                .andExpect(status().isConflict());
         enviar(patch("/players/" + id + "/condition"), Map.of("condition", "MAL_CONDICIONADO"))
                 .andExpect(status().isOk());
-        enviar(patch("/players/" + id + "/condition"), Map.of("condition", "APTO")).andExpect(status().isOk());
+        enviar(patch("/players/" + id + "/condition"), Map.of("condition", "APTO"))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -105,7 +113,8 @@ class JogadorAlteracaoApiTest extends ApiTest {
 
         enviar(patch("/players/" + id + "/condition"), "{}").andExpect(status().isBadRequest());
         enviar(patch("/players/" + id + "/condition"), "{\"condition\": null}").andExpect(status().isBadRequest());
-        enviar(patch("/players/" + id + "/condition"), "{\"condition\": \"apto\"}").andExpect(status().isBadRequest());
+        enviar(patch("/players/" + id + "/condition"), "{\"condition\": \"apto\"}")
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -118,9 +127,11 @@ class JogadorAlteracaoApiTest extends ApiTest {
 
         mockMvc.perform(get("/players/" + id)).andExpect(status().isNotFound());
         enviar(put("/players/" + id), EDICAO).andExpect(status().isNotFound());
-        enviar(patch("/players/" + id + "/condition"), Map.of("condition", "DOENTE")).andExpect(status().isNotFound());
+        enviar(patch("/players/" + id + "/condition"), Map.of("condition", "DOENTE"))
+                .andExpect(status().isNotFound());
         mockMvc.perform(delete("/players/" + id)).andExpect(status().isNotFound());
-        mockMvc.perform(get("/players")).andExpect(jsonPath("$.meta.total_items").value(0));
+        mockMvc.perform(get("/players"))
+                .andExpect(jsonPath("$.meta.total_items").value(0));
 
         Integer gravados = jdbcTemplate.queryForObject(
                 "SELECT count(*) FROM jogadores WHERE excluido_em IS NOT NULL", Integer.class);

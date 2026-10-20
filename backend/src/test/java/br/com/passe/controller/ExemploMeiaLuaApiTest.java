@@ -75,7 +75,8 @@ class ExemploMeiaLuaApiTest extends ApiTest {
                 .andExpect(jsonPath("$.contract_status").value("RESCINDIDO"))
                 .andExpect(jsonPath("$.club_cash").value(296.85));
 
-        mockMvc.perform(get("/players/" + meiaLua)).andExpect(jsonPath("$.club_id").isEmpty());
+        mockMvc.perform(get("/players/" + meiaLua))
+                .andExpect(jsonPath("$.club_id").isEmpty());
 
         mockMvc.perform(get("/clubs/" + aguias + "/transactions").param("type", "VENDA"))
                 .andExpect(jsonPath("$.data[*].type", contains("VENDA")))
@@ -96,15 +97,22 @@ class ExemploMeiaLuaApiTest extends ApiTest {
         byte[] csv = mockMvc.perform(get("/clubs/" + aguias + "/transactions/export"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", startsWith("text/csv")))
-                .andReturn().getResponse().getContentAsByteArray();
-        assertThat(new String(csv, StandardCharsets.UTF_8)).isEqualTo("""
+                .andReturn()
+                .getResponse()
+                .getContentAsByteArray();
+        assertThat(new String(csv, StandardCharsets.UTF_8))
+                .isEqualTo(
+                        """
                 data_hora;tipo;jogador;valor;taxa_ou_comissao;multa;lucro;variacao_caixa
                 2026-11-05T16:40:00-03:00;VENDA;Meia Lua;40,00;0,30;4,00;3,00;35,70
                 2026-11-02T10:15:00-03:00;COMPRA;Meia Lua;37,00;1,85;0,00;;-38,85
                 """);
 
         mockMvc.perform(get("/clubs/" + aguias + "/transactions/export").param("type", "VENDA"))
-                .andExpect(content().string("""
+                .andExpect(
+                        content()
+                                .string(
+                                        """
                         data_hora;tipo;jogador;valor;taxa_ou_comissao;multa;lucro;variacao_caixa
                         2026-11-05T16:40:00-03:00;VENDA;Meia Lua;40,00;0,30;4,00;3,00;35,70
                         """));

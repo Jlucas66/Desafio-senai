@@ -17,8 +17,9 @@ import jakarta.validation.Payload;
 @Constraint(validatedBy = NomeDeJogadorValidator.class)
 public @interface NomeDeJogador {
 
-    String message() default "name deve ter de 3 a 100 caracteres, pelo menos duas palavras, nenhum dígito "
-            + "e nenhum caractere de controle.";
+    String message() default
+            "name deve ter de 3 a 100 caracteres, pelo menos duas palavras, nenhum dígito "
+                    + "e nenhum caractere de controle.";
 
     Class<?>[] groups() default {};
 

@@ -14,23 +14,30 @@ public record JogadorCadastroRequest(
         @NotNull(message = "name é obrigatório.") @NomeDeJogador String name,
         @NotNull(message = "position é obrigatório.") Posicao position,
         @NotNull(message = "agility é obrigatório.")
-        @Range(min = 1, max = 100, message = "agility deve estar entre 1 e 100.") Integer agility,
-        @NotNull(message = "age é obrigatório.")
-        @Range(min = 16, max = 45, message = "age deve estar entre 16 e 45.") Integer age,
-        @NotNull(message = "pace é obrigatório.")
-        @Range(min = 1, max = 99, message = "pace deve estar entre 1 e 99.") Integer pace,
+                @Range(min = 1, max = 100, message = "agility deve estar entre 1 e 100.")
+                Integer agility,
+        @NotNull(message = "age é obrigatório.") @Range(min = 16, max = 45, message = "age deve estar entre 16 e 45.")
+                Integer age,
+        @NotNull(message = "pace é obrigatório.") @Range(min = 1, max = 99, message = "pace deve estar entre 1 e 99.")
+                Integer pace,
         @NotNull(message = "shooting é obrigatório.")
-        @Range(min = 1, max = 99, message = "shooting deve estar entre 1 e 99.") Integer shooting,
+                @Range(min = 1, max = 99, message = "shooting deve estar entre 1 e 99.")
+                Integer shooting,
         @NotNull(message = "passing é obrigatório.")
-        @Range(min = 1, max = 99, message = "passing deve estar entre 1 e 99.") Integer passing,
+                @Range(min = 1, max = 99, message = "passing deve estar entre 1 e 99.")
+                Integer passing,
         @NotNull(message = "dribbling é obrigatório.")
-        @Range(min = 1, max = 99, message = "dribbling deve estar entre 1 e 99.") Integer dribbling,
+                @Range(min = 1, max = 99, message = "dribbling deve estar entre 1 e 99.")
+                Integer dribbling,
         @NotNull(message = "defending é obrigatório.")
-        @Range(min = 1, max = 99, message = "defending deve estar entre 1 e 99.") Integer defending,
+                @Range(min = 1, max = 99, message = "defending deve estar entre 1 e 99.")
+                Integer defending,
         @NotNull(message = "physical é obrigatório.")
-        @Range(min = 1, max = 99, message = "physical deve estar entre 1 e 99.") Integer physical,
+                @Range(min = 1, max = 99, message = "physical deve estar entre 1 e 99.")
+                Integer physical,
         @NotNull(message = "potential é obrigatório.")
-        @Range(min = 1, max = 99, message = "potential deve estar entre 1 e 99.") Integer potential) {
+                @Range(min = 1, max = 99, message = "potential deve estar entre 1 e 99.")
+                Integer potential) {
 
     public JogadorCadastroRequest {
         name = Textos.normalizarEspacos(name);
@@ -52,12 +59,18 @@ public record JogadorCadastroRequest(
 
     @AssertTrue(message = "potential deve ser maior ou igual ao maior atributo; com 33 anos ou mais, igual a ele.")
     public boolean isPotencialPermitido() {
-        return !atributosInformados() || potential == null || age == null
+        return !atributosInformados()
+                || potential == null
+                || age == null
                 || RegrasJogador.potencialPermitido(potential, atributos(), age);
     }
 
     private boolean atributosInformados() {
-        return pace != null && shooting != null && passing != null
-                && dribbling != null && defending != null && physical != null;
+        return pace != null
+                && shooting != null
+                && passing != null
+                && dribbling != null
+                && defending != null
+                && physical != null;
     }
 }

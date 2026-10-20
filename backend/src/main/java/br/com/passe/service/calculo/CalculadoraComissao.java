@@ -13,8 +13,7 @@ public final class CalculadoraComissao {
     private static final BigDecimal PERCENTUAL_PRIMEIRA_FAIXA = BigDecimal.valueOf(10);
     private static final BigDecimal PERCENTUAL_SEGUNDA_FAIXA = BigDecimal.valueOf(20);
 
-    private CalculadoraComissao() {
-    }
+    private CalculadoraComissao() {}
 
     public static BigDecimal calcular(BigDecimal lucro) {
         if (lucro.signum() <= 0) {

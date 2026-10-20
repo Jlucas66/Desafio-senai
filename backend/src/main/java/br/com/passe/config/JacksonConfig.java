@@ -16,8 +16,7 @@ public class JacksonConfig {
 
     @Bean
     public Jackson2ObjectMapperBuilderCustomizer leituraEstritaDoJson() {
-        return builder -> builder
-                .featuresToEnable(DeserializationFeature.FAIL_ON_NUMBERS_FOR_ENUMS)
+        return builder -> builder.featuresToEnable(DeserializationFeature.FAIL_ON_NUMBERS_FOR_ENUMS)
                 .deserializerByType(Integer.class, new InteiroEstritoDeserializer())
                 .serializerByType(OffsetDateTime.class, new DataHoraSerializer())
                 .postConfigurer(mapper -> mapper.coercionConfigFor(LogicalType.Textual)

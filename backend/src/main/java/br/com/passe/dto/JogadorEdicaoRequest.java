@@ -13,9 +13,10 @@ public record JogadorEdicaoRequest(
         @NotNull(message = "name é obrigatório.") @NomeDeJogador String name,
         @NotNull(message = "position é obrigatório.") Posicao position,
         @NotNull(message = "agility é obrigatório.")
-        @Range(min = 1, max = 100, message = "agility deve estar entre 1 e 100.") Integer agility,
-        @NotNull(message = "age é obrigatório.")
-        @Range(min = 16, max = 45, message = "age deve estar entre 16 e 45.") Integer age) {
+                @Range(min = 1, max = 100, message = "agility deve estar entre 1 e 100.")
+                Integer agility,
+        @NotNull(message = "age é obrigatório.") @Range(min = 16, max = 45, message = "age deve estar entre 16 e 45.")
+                Integer age) {
 
     public JogadorEdicaoRequest {
         name = Textos.normalizarEspacos(name);

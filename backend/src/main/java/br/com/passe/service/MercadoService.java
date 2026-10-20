@@ -58,21 +58,29 @@ public class MercadoService {
         BigDecimal taxa = CalculadoraTaxaCompra.calcular(valor);
         BigDecimal custoTotal = valor.add(taxa);
         if (custoTotal.multiply(DOIS).compareTo(clube.getCaixa()) > 0) {
-            throw new RegraNegocioException("O custo da compra (" + custoTotal
-                    + ") passa do limite de 50% do caixa (" + clube.getCaixa() + ").");
+            throw new RegraNegocioException("O custo da compra (" + custoTotal + ") passa do limite de 50% do caixa ("
+                    + clube.getCaixa() + ").");
         }
 
         clube.setCaixa(clube.getCaixa().subtract(custoTotal));
         jogador.setClubeId(clube.getId());
         jogador.setAtualizadoEm(agora);
         Contrato contrato = contratoRepository.save(novoContrato(jogador, clube, valor, fimDaFidelidade, agora));
-        Transacao transacao = transacaoRepository.save(novaTransacao(jogador, clube, TipoTransacao.COMPRA, valor,
-                taxa, BigDecimal.ZERO.setScale(2), null, custoTotal.negate(), agora));
+        Transacao transacao = transacaoRepository.save(novaTransacao(
+                jogador,
+                clube,
+                TipoTransacao.COMPRA,
+                valor,
+                taxa,
+                BigDecimal.ZERO.setScale(2),
+                null,
+                custoTotal.negate(),
+                agora));
 
         return new CompraResponse(
                 TransacaoResponse.de(transacao),
-                new CompraResponse.ContratoCompra(contrato.getValorCompra(), contrato.getFidelidadeAte(),
-                        contrato.getSituacao()),
+                new CompraResponse.ContratoCompra(
+                        contrato.getValorCompra(), contrato.getFidelidadeAte(), contrato.getSituacao()),
                 clube.getCaixa());
     }
 
@@ -83,7 +91,8 @@ public class MercadoService {
             throw new RegraNegocioException("Jogador livre não pode ser vendido.");
         }
         Clube clube = clubeRepository.buscarParaAtualizar(jogador.getClubeId());
-        Contrato contrato = contratoRepository.findByJogadorIdAndSituacao(jogadorId, SituacaoContrato.ATIVO)
+        Contrato contrato = contratoRepository
+                .findByJogadorIdAndSituacao(jogadorId, SituacaoContrato.ATIVO)
                 .orElseThrow(() -> new IllegalStateException("Jogador com clube sem contrato ativo: " + jogadorId));
         OffsetDateTime agora = OffsetDateTime.now(clock);
 
@@ -100,11 +109,16 @@ public class MercadoService {
         jogador.setAtualizadoEm(agora);
         contrato.setSituacao(multa.signum() > 0 ? SituacaoContrato.RESCINDIDO : SituacaoContrato.ENCERRADO);
         contrato.setEncerradoEm(agora);
-        Transacao transacao = transacaoRepository.save(novaTransacao(jogador, clube, TipoTransacao.VENDA, valor,
-                comissao, multa, lucro, credito, agora));
+        Transacao transacao = transacaoRepository.save(
+                novaTransacao(jogador, clube, TipoTransacao.VENDA, valor, comissao, multa, lucro, credito, agora));
 
-        return new VendaResponse(TransacaoResponse.de(transacao), contrato.getValorCompra(), diasRestantes,
-                percentualDaMulta, contrato.getSituacao(), clube.getCaixa());
+        return new VendaResponse(
+                TransacaoResponse.de(transacao),
+                contrato.getValorCompra(),
+                diasRestantes,
+                percentualDaMulta,
+                contrato.getSituacao(),
+                clube.getCaixa());
     }
 
     private static void validarFimDaFidelidade(OffsetDateTime fimDaFidelidade, OffsetDateTime agora) {
@@ -118,7 +132,8 @@ public class MercadoService {
         if (!jogador.estaLivre()) {
             throw new RegraNegocioException("Só jogador livre pode ser comprado.");
         }
-        if (transacaoRepository.existsByClubeIdAndJogadorIdAndTipo(clube.getId(), jogador.getId(), TipoTransacao.VENDA)) {
+        if (transacaoRepository.existsByClubeIdAndJogadorIdAndTipo(
+                clube.getId(), jogador.getId(), TipoTransacao.VENDA)) {
             throw new RegraNegocioException("O clube não pode comprar um jogador que ele mesmo já vendeu.");
         }
         if (jogadorRepository.countByClubeId(clube.getId()) >= MAXIMO_DO_ELENCO) {
@@ -126,8 +141,12 @@ public class MercadoService {
         }
     }
 
-    private static Contrato novoContrato(Jogador jogador, Clube clube, BigDecimal valorCompra,
-            OffsetDateTime fimDaFidelidade, OffsetDateTime agora) {
+    private static Contrato novoContrato(
+            Jogador jogador,
+            Clube clube,
+            BigDecimal valorCompra,
+            OffsetDateTime fimDaFidelidade,
+            OffsetDateTime agora) {
         Contrato contrato = new Contrato();
         contrato.setJogadorId(jogador.getId());
         contrato.setClubeId(clube.getId());
@@ -138,8 +157,16 @@ public class MercadoService {
         return contrato;
     }
 
-    private static Transacao novaTransacao(Jogador jogador, Clube clube, TipoTransacao tipo, BigDecimal valor,
-            BigDecimal taxa, BigDecimal multa, BigDecimal lucro, BigDecimal variacaoCaixa, OffsetDateTime agora) {
+    private static Transacao novaTransacao(
+            Jogador jogador,
+            Clube clube,
+            TipoTransacao tipo,
+            BigDecimal valor,
+            BigDecimal taxa,
+            BigDecimal multa,
+            BigDecimal lucro,
+            BigDecimal variacaoCaixa,
+            OffsetDateTime agora) {
         Transacao transacao = new Transacao();
         transacao.setClubeId(clube.getId());
         transacao.setJogadorId(jogador.getId());

@@ -10,6 +10,5 @@ public record HistoricoResponse(List<TransacaoResponse> data, Resumo summary) {
             BigDecimal totalReceived,
             BigDecimal totalFees,
             BigDecimal totalPenalties,
-            BigDecimal totalProfit) {
-    }
+            BigDecimal totalProfit) {}
 }

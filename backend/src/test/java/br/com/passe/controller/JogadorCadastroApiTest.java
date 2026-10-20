@@ -90,16 +90,17 @@ class JogadorCadastroApiTest extends ApiTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {
-            "\"agility\": \"15\"",
-            "\"agility\": 50.5",
-            "\"agility\": true",
-            "\"name\": 123",
-            "\"position\": \"mei\"",
-            "\"position\": 0",
-            "\"agility\": null",
-            "\"agility\": 3000000000"
-    })
+    @ValueSource(
+            strings = {
+                "\"agility\": \"15\"",
+                "\"agility\": 50.5",
+                "\"agility\": true",
+                "\"name\": 123",
+                "\"position\": \"mei\"",
+                "\"position\": 0",
+                "\"agility\": null",
+                "\"agility\": 3000000000"
+            })
     void recusaTipoErradoOuValorDeListaFora(String campo) throws Exception {
         Map<String, Object> semOCampo = new HashMap<>(jogadorValido());
         semOCampo.remove(campo.substring(1, campo.indexOf('"', 1)));
@@ -110,8 +111,20 @@ class JogadorCadastroApiTest extends ApiTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"name", "position", "agility", "age", "pace", "shooting", "passing", "dribbling",
-            "defending", "physical", "potential"})
+    @ValueSource(
+            strings = {
+                "name",
+                "position",
+                "agility",
+                "age",
+                "pace",
+                "shooting",
+                "passing",
+                "dribbling",
+                "defending",
+                "physical",
+                "potential"
+            })
     void recusaCampoObrigatorioAusente(String campo) throws Exception {
         Map<String, Object> jogador = new HashMap<>(jogadorValido());
         jogador.remove(campo);
@@ -139,7 +152,8 @@ class JogadorCadastroApiTest extends ApiTest {
         String nome = "Ana " + "a".repeat(97);
 
         enviar(post("/players"), com(jogadorValido(), "name", nome)).andExpect(status().isBadRequest());
-        enviar(post("/players"), com(jogadorValido(), "name", nome.substring(1))).andExpect(status().isCreated());
+        enviar(post("/players"), com(jogadorValido(), "name", nome.substring(1)))
+                .andExpect(status().isCreated());
     }
 
     @Test
@@ -186,8 +200,17 @@ class JogadorCadastroApiTest extends ApiTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/players/abc", "/players/0", "/players/-1", "/players/1.5", "/players/01",
-            "/players/2147483648", "/players/1/", "/inexistente"})
+    @ValueSource(
+            strings = {
+                "/players/abc",
+                "/players/0",
+                "/players/-1",
+                "/players/1.5",
+                "/players/01",
+                "/players/2147483648",
+                "/players/1/",
+                "/inexistente"
+            })
     void idForaDoFormatoECaminhoInexistenteSao404(String caminho) throws Exception {
         cadastrarJogador(jogadorValido());
 

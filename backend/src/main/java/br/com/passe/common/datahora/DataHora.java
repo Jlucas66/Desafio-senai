@@ -17,14 +17,14 @@ public final class DataHora {
 
     public static final ZoneOffset BRASILIA = ZoneOffset.ofHours(-3);
 
-    private static final Pattern FORMATO_ENTRADA = Pattern.compile("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}-03:00");
-    private static final DateTimeFormatter ENTRADA = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm")
-            .withResolverStyle(ResolverStyle.STRICT);
+    private static final Pattern FORMATO_ENTRADA =
+            Pattern.compile("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}-03:00");
+    private static final DateTimeFormatter ENTRADA =
+            DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm").withResolverStyle(ResolverStyle.STRICT);
     private static final DateTimeFormatter SAIDA = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ssxxx");
     private static final int TAMANHO_SEM_FUSO = "AAAA-MM-DDTHH:MM".length();
 
-    private DataHora() {
-    }
+    private DataHora() {}
 
     public static Optional<OffsetDateTime> ler(String texto) {
         if (texto == null || !FORMATO_ENTRADA.matcher(texto).matches()) {

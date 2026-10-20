@@ -12,8 +12,7 @@ public final class CalculadoraTaxaCompra {
     private static final BigDecimal VALOR_SEM_TAXA = new BigDecimal("30.00");
     private static final BigDecimal PERCENTUAL = BigDecimal.valueOf(5);
 
-    private CalculadoraTaxaCompra() {
-    }
+    private CalculadoraTaxaCompra() {}
 
     public static BigDecimal calcular(BigDecimal valorDeMercado) {
         if (valorDeMercado.compareTo(VALOR_SEM_TAXA) <= 0) {

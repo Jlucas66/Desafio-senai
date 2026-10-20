@@ -35,18 +35,26 @@ public record FiltroJogadores(
     private static final int LIMITE_MAXIMO = 50;
 
     public static FiltroJogadores de(ParametrosConsulta parametros) {
-        int idadeMinima = parametros.inteiroPositivo("min_age")
-                .map(idade -> noIntervalo("min_age", idade, IDADE_MINIMA, IDADE_MAXIMA)).orElse(IDADE_MINIMA);
-        int idadeMaxima = parametros.inteiroPositivo("max_age")
-                .map(idade -> noIntervalo("max_age", idade, IDADE_MINIMA, IDADE_MAXIMA)).orElse(IDADE_MAXIMA);
+        int idadeMinima = parametros
+                .inteiroPositivo("min_age")
+                .map(idade -> noIntervalo("min_age", idade, IDADE_MINIMA, IDADE_MAXIMA))
+                .orElse(IDADE_MINIMA);
+        int idadeMaxima = parametros
+                .inteiroPositivo("max_age")
+                .map(idade -> noIntervalo("max_age", idade, IDADE_MINIMA, IDADE_MAXIMA))
+                .orElse(IDADE_MAXIMA);
         if (idadeMinima > idadeMaxima) {
             throw new RequisicaoInvalidaException("min_age não pode ser maior que max_age.");
         }
 
-        BigDecimal valorMinimo = parametros.decimal("min_value")
-                .map(valor -> ateValorMaximo("min_value", valor)).orElse(BigDecimal.ZERO);
-        BigDecimal valorMaximo = parametros.decimal("max_value")
-                .map(valor -> ateValorMaximo("max_value", valor)).orElse(VALOR_MAXIMO);
+        BigDecimal valorMinimo = parametros
+                .decimal("min_value")
+                .map(valor -> ateValorMaximo("min_value", valor))
+                .orElse(BigDecimal.ZERO);
+        BigDecimal valorMaximo = parametros
+                .decimal("max_value")
+                .map(valor -> ateValorMaximo("max_value", valor))
+                .orElse(VALOR_MAXIMO);
         if (valorMinimo.compareTo(valorMaximo) > 0) {
             throw new RequisicaoInvalidaException("min_value não pode ser maior que max_value.");
         }
@@ -69,14 +77,18 @@ public record FiltroJogadores(
                 valorMaximo,
                 parametros.texto("sort").map(OrdenacaoJogadores::ler).orElse(List.of(OrdenacaoJogadores.NAME)),
                 parametros.inteiroPositivo("page").orElse(1),
-                parametros.inteiroPositivo("limit")
-                        .map(limite -> noIntervalo("limit", limite, 1, LIMITE_MAXIMO)).orElse(LIMITE_PADRAO));
+                parametros
+                        .inteiroPositivo("limit")
+                        .map(limite -> noIntervalo("limit", limite, 1, LIMITE_MAXIMO))
+                        .orElse(LIMITE_PADRAO));
     }
 
     private static String validarBusca(String valor) {
         String busca = Textos.normalizarEspacos(valor);
-        if (busca == null || Textos.temCaractereDeControle(busca)
-                || Textos.tamanho(busca) < BUSCA_TAMANHO_MINIMO || Textos.tamanho(busca) > BUSCA_TAMANHO_MAXIMO) {
+        if (busca == null
+                || Textos.temCaractereDeControle(busca)
+                || Textos.tamanho(busca) < BUSCA_TAMANHO_MINIMO
+                || Textos.tamanho(busca) > BUSCA_TAMANHO_MAXIMO) {
             throw ParametrosConsulta.invalido("search");
         }
         return busca;

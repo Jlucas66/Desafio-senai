@@ -10,15 +10,17 @@ import br.com.passe.common.texto.Textos;
  */
 public final class RegrasClube {
 
-    private RegrasClube() {
-    }
+    private RegrasClube() {}
 
     public static boolean siglaCorrespondeAoNome(String sigla, String nome) {
         int[] letrasDaSigla = sigla.toLowerCase(Locale.ROOT).codePoints().toArray();
         if (letrasDaSigla[0] == letrasDaSigla[1] && letrasDaSigla[1] == letrasDaSigla[2]) {
             return false;
         }
-        int[] letrasDoNome = Textos.semAcentosEmMinusculas(nome).codePoints().filter(Character::isLetter).toArray();
+        int[] letrasDoNome = Textos.semAcentosEmMinusculas(nome)
+                .codePoints()
+                .filter(Character::isLetter)
+                .toArray();
         if (letrasDoNome.length == 0 || letrasDoNome[0] != letrasDaSigla[0]) {
             return false;
         }

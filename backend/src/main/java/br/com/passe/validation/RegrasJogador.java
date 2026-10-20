@@ -12,8 +12,7 @@ public final class RegrasJogador {
     private static final int SOMA_MAXIMA_DOS_ATRIBUTOS = 480;
     private static final int IDADE_MINIMA_POTENCIAL_ATINGIDO = 33;
 
-    private RegrasJogador() {
-    }
+    private RegrasJogador() {}
 
     public static boolean agilidadePermitida(int agilidade, int idade) {
         return idade < IDADE_MINIMA_VETERANO || agilidade <= AGILIDADE_MAXIMA_VETERANO;

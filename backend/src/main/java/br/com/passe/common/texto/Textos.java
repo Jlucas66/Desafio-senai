@@ -11,8 +11,7 @@ public final class Textos {
     private static final Pattern ESPACOS_REPETIDOS = Pattern.compile(" {2,}");
     private static final Pattern MARCAS_DE_ACENTO = Pattern.compile("\\p{Mn}");
 
-    private Textos() {
-    }
+    private Textos() {}
 
     public static String normalizarEspacos(String texto) {
         if (texto == null) {

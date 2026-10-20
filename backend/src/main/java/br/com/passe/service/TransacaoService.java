@@ -25,7 +25,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TransacaoService {
 
-    private static final String CABECALHO_CSV = "data_hora;tipo;jogador;valor;taxa_ou_comissao;multa;lucro;variacao_caixa";
+    private static final String CABECALHO_CSV =
+            "data_hora;tipo;jogador;valor;taxa_ou_comissao;multa;lucro;variacao_caixa";
     private static final String SEPARADOR_CSV = ";";
     private static final String FIM_DE_LINHA = "\n";
 
@@ -36,13 +37,15 @@ public class TransacaoService {
     @Transactional(readOnly = true)
     public HistoricoResponse listar(int clubeId, FiltroTransacoes filtro) {
         List<Transacao> transacoes = buscar(clubeId, filtro);
-        return new HistoricoResponse(transacoes.stream().map(TransacaoResponse::de).toList(), resumir(transacoes));
+        return new HistoricoResponse(
+                transacoes.stream().map(TransacaoResponse::de).toList(), resumir(transacoes));
     }
 
     @Transactional(readOnly = true)
     public String exportarCsv(int clubeId, FiltroTransacoes filtro) {
         StringBuilder csv = new StringBuilder(CABECALHO_CSV).append(FIM_DE_LINHA);
-        buscar(clubeId, filtro).forEach(transacao -> csv.append(linhaCsv(transacao)).append(FIM_DE_LINHA));
+        buscar(clubeId, filtro)
+                .forEach(transacao -> csv.append(linhaCsv(transacao)).append(FIM_DE_LINHA));
         return csv.toString();
     }
 
@@ -69,16 +72,15 @@ public class TransacaoService {
                 somar(transacoes, venda, Transacao::getLucro));
     }
 
-    private static BigDecimal somar(List<Transacao> transacoes, Predicate<Transacao> filtro,
-            Function<Transacao, BigDecimal> valor) {
-        return Moedas.arredondar(transacoes.stream()
-                .filter(filtro)
-                .map(valor)
-                .reduce(BigDecimal.ZERO, BigDecimal::add));
+    private static BigDecimal somar(
+            List<Transacao> transacoes, Predicate<Transacao> filtro, Function<Transacao, BigDecimal> valor) {
+        return Moedas.arredondar(
+                transacoes.stream().filter(filtro).map(valor).reduce(BigDecimal.ZERO, BigDecimal::add));
     }
 
     private static String linhaCsv(Transacao transacao) {
-        return String.join(SEPARADOR_CSV,
+        return String.join(
+                SEPARADOR_CSV,
                 DataHora.formatar(transacao.getCriadoEm()),
                 transacao.getTipo().name(),
                 textoCsv(transacao.getNomeJogador()),

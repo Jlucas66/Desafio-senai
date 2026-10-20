@@ -10,7 +10,6 @@ import br.com.passe.common.web.ParametrosConsulta;
  * value_asc,value_desc.
  */
 public enum OrdenacaoJogadores {
-
     NAME("name", "name"),
     VALUE_ASC("value_asc", "value"),
     VALUE_DESC("value_desc", "value"),
@@ -34,8 +33,10 @@ public enum OrdenacaoJogadores {
         if (codigos.length > MAXIMO_DE_CRITERIOS) {
             throw ParametrosConsulta.invalido(PARAMETRO);
         }
-        List<OrdenacaoJogadores> criterios = Arrays.stream(codigos).map(OrdenacaoJogadores::doCodigo).toList();
-        long camposDistintos = criterios.stream().map(criterio -> criterio.campo).distinct().count();
+        List<OrdenacaoJogadores> criterios =
+                Arrays.stream(codigos).map(OrdenacaoJogadores::doCodigo).toList();
+        long camposDistintos =
+                criterios.stream().map(criterio -> criterio.campo).distinct().count();
         if (camposDistintos < criterios.size()) {
             throw ParametrosConsulta.invalido(PARAMETRO);
         }

@@ -36,7 +36,9 @@ public class TransacaoController {
     @GetMapping("/export")
     public ResponseEntity<String> exportar(@PathVariable int id, @RequestParam Map<String, String> parametros) {
         String csv = transacaoService.exportarCsv(id, FiltroTransacoes.de(new ParametrosConsulta(parametros)));
-        ContentDisposition anexo = ContentDisposition.attachment().filename("transacoes-clube-" + id + ".csv").build();
+        ContentDisposition anexo = ContentDisposition.attachment()
+                .filename("transacoes-clube-" + id + ".csv")
+                .build();
         return ResponseEntity.ok()
                 .contentType(TEXT_CSV)
                 .header(HttpHeaders.CONTENT_DISPOSITION, anexo.toString())

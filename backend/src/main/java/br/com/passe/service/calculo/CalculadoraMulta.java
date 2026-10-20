@@ -14,8 +14,7 @@ public final class CalculadoraMulta {
     private static final long NANOS_POR_DIA = Duration.ofDays(1).toNanos();
     private static final BigDecimal TETO = new BigDecimal("10.00");
 
-    private CalculadoraMulta() {
-    }
+    private CalculadoraMulta() {}
 
     public static int diasRestantes(OffsetDateTime fimDaFidelidade, OffsetDateTime agora) {
         Duration falta = Duration.between(agora, fimDaFidelidade);

@@ -4,8 +4,4 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 public record ContratoElencoResponse(
-        BigDecimal purchaseValue,
-        OffsetDateTime loyaltyUntil,
-        int remainingDays,
-        int penaltyRate) {
-}
+        BigDecimal purchaseValue, OffsetDateTime loyaltyUntil, int remainingDays, int penaltyRate) {}

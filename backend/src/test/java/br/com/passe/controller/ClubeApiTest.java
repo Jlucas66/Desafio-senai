@@ -49,7 +49,8 @@ class ClubeApiTest extends ApiTest {
     void nomeUnicoIgnorandoMaiusculasMasNaoAcentos() throws Exception {
         criarClubePelaApi("Águias FC", "AGU");
 
-        enviar(post("/clubs"), Map.of("name", "  águias   fc ", "acronym", "AFC")).andExpect(status().isConflict());
+        enviar(post("/clubs"), Map.of("name", "  águias   fc ", "acronym", "AFC"))
+                .andExpect(status().isConflict());
         enviar(post("/clubs"), Map.of("name", "Aguias FC", "acronym", "AFC")).andExpect(status().isCreated());
     }
 
@@ -57,7 +58,8 @@ class ClubeApiTest extends ApiTest {
     void siglaUnica() throws Exception {
         criarClubePelaApi("Águias FC", "AGU");
 
-        enviar(post("/clubs"), Map.of("name", "Agulhas União", "acronym", "AGU")).andExpect(status().isConflict());
+        enviar(post("/clubs"), Map.of("name", "Agulhas União", "acronym", "AGU"))
+                .andExpect(status().isConflict());
     }
 
     @Test
@@ -73,18 +75,18 @@ class ClubeApiTest extends ApiTest {
 
     @ParameterizedTest(name = "{0} / {1}")
     @CsvSource({
-            "Águias, AGU",
-            "Águias FC 2, AGU",
-            "Um Dois Tres Quatro Cinco Seis, UDT",
-            "Ab, ABX",
-            "Águias_FC, AGU",
-            "Águias FC, agu",
-            "Águias FC, AG",
-            "Águias FC, AGUA",
-            "Águias FC, ÁGU",
-            "Águias FC, GUA",
-            "Águias FC, AXC",
-            "Aaa Clube, AAA"
+        "Águias, AGU",
+        "Águias FC 2, AGU",
+        "Um Dois Tres Quatro Cinco Seis, UDT",
+        "Ab, ABX",
+        "Águias_FC, AGU",
+        "Águias FC, agu",
+        "Águias FC, AG",
+        "Águias FC, AGUA",
+        "Águias FC, ÁGU",
+        "Águias FC, GUA",
+        "Águias FC, AXC",
+        "Aaa Clube, AAA"
     })
     void recusaNomeOuSiglaInvalidos(String nome, String sigla) throws Exception {
         enviar(post("/clubs"), Map.of("name", nome, "acronym", sigla)).andExpect(status().isBadRequest());
@@ -92,11 +94,18 @@ class ClubeApiTest extends ApiTest {
 
     @Test
     void aceitaHifenEPontoNoNome() throws Exception {
-        enviar(post("/clubs"), Map.of("name", "Sport Club Recife-PE.", "acronym", "SCR")).andExpect(status().isCreated());
+        enviar(post("/clubs"), Map.of("name", "Sport Club Recife-PE.", "acronym", "SCR"))
+                .andExpect(status().isCreated());
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"{\"acronym\": \"AGU\"}", "{\"name\": \"Águias FC\"}", "[]", "{\"name\": 1, \"acronym\": \"AGU\"}"})
+    @ValueSource(
+            strings = {
+                "{\"acronym\": \"AGU\"}",
+                "{\"name\": \"Águias FC\"}",
+                "[]",
+                "{\"name\": 1, \"acronym\": \"AGU\"}"
+            })
     void recusaCorpoInvalido(String corpo) throws Exception {
         enviar(post("/clubs"), corpo).andExpect(status().isBadRequest());
     }
@@ -109,8 +118,7 @@ class ClubeApiTest extends ApiTest {
         definirCaixa(gama, "310.00");
         definirCaixa(delta, "310.00");
 
-        mockMvc.perform(get("/clubs"))
-                .andExpect(jsonPath("$[*].id", contains(delta, epsilon, gama)));
+        mockMvc.perform(get("/clubs")).andExpect(jsonPath("$[*].id", contains(delta, epsilon, gama)));
         mockMvc.perform(get("/clubs").param("sort", "net_worth_desc"))
                 .andExpect(jsonPath("$[*].id", contains(delta, gama, epsilon)));
         mockMvc.perform(get("/clubs").param("sort", "net_worth_asc"))

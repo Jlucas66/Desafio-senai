@@ -24,13 +24,11 @@ public final class CalculadoraValorBase {
             new Faixa(61, 75, new BigDecimal("2.00")),
             new Faixa(76, 99, new BigDecimal("6.00")));
 
-    private CalculadoraValorBase() {
-    }
+    private CalculadoraValorBase() {}
 
     public static BigDecimal calcular(int overall, int potencial, int idadeNoCadastro) {
-        BigDecimal parteDoOverall = FAIXAS.stream()
-                .map(faixa -> faixa.valorDosPontos(overall))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal parteDoOverall =
+                FAIXAS.stream().map(faixa -> faixa.valorDosPontos(overall)).reduce(BigDecimal.ZERO, BigDecimal::add);
         if (idadeNoCadastro <= Jogador.IDADE_MAXIMA_JOVEM_PROMESSA) {
             BigDecimal bonusJovemPromessa = BigDecimal.valueOf(100 + potencial - overall);
             parteDoOverall = Moedas.aplicarPercentual(parteDoOverall, bonusJovemPromessa);

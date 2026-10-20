@@ -29,7 +29,9 @@ class TransacaoApiTest extends ApiTest {
         int jogador = cadastrarJogador(jogadorValido());
         comprar(jogador, clube, FIDELIDADE);
 
-        enviar(put("/players/" + jogador), "{\"name\": \"Novo Nome\", \"position\": \"MEI\", \"agility\": 85, \"age\": 30}")
+        enviar(
+                        put("/players/" + jogador),
+                        "{\"name\": \"Novo Nome\", \"position\": \"MEI\", \"agility\": 85, \"age\": 30}")
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/clubs/" + clube + "/transactions"))
@@ -64,7 +66,8 @@ class TransacaoApiTest extends ApiTest {
 
         BigDecimal somaDasVariacoes = jdbcTemplate.queryForObject(
                 "SELECT sum(variacao_caixa) FROM transacoes WHERE clube_id = ?", BigDecimal.class, clube);
-        BigDecimal caixa = jdbcTemplate.queryForObject("SELECT caixa FROM clubes WHERE id = ?", BigDecimal.class, clube);
+        BigDecimal caixa =
+                jdbcTemplate.queryForObject("SELECT caixa FROM clubes WHERE id = ?", BigDecimal.class, clube);
         assertThat(new BigDecimal("300.00").add(somaDasVariacoes)).isEqualByComparingTo(caixa);
     }
 
@@ -81,7 +84,9 @@ class TransacaoApiTest extends ApiTest {
                 .andExpect(jsonPath("$.data[*].type", contains("COMPRA", "COMPRA")))
                 .andExpect(jsonPath("$.summary.total_spent").value(84.00))
                 .andExpect(jsonPath("$.summary.total_received").value(0.00));
-        mockMvc.perform(get("/clubs/" + clube + "/transactions").param("type", "VENDA,COMPRA").param("player_id", "" + segundo))
+        mockMvc.perform(get("/clubs/" + clube + "/transactions")
+                        .param("type", "VENDA,COMPRA")
+                        .param("player_id", "" + segundo))
                 .andExpect(jsonPath("$.data[*].player_id", contains(segundo)))
                 .andExpect(jsonPath("$.summary.total_spent").value(42.00))
                 .andExpect(jsonPath("$.summary.total_fees").value(2.00));
@@ -117,8 +122,18 @@ class TransacaoApiTest extends ApiTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"type=", "type=venda", "type=COMPRA,venda", "type=VENDA,VENDA", "type=COMPRA,", "type=COMPRA, VENDA",
-            "player_id=0", "player_id=01", "player_id=abc"})
+    @ValueSource(
+            strings = {
+                "type=",
+                "type=venda",
+                "type=COMPRA,venda",
+                "type=VENDA,VENDA",
+                "type=COMPRA,",
+                "type=COMPRA, VENDA",
+                "player_id=0",
+                "player_id=01",
+                "player_id=abc"
+            })
     void recusaFiltroInvalido(String consulta) throws Exception {
         int clube = criarClubePelaApi("Águias FC", "AGU");
 
@@ -134,7 +149,8 @@ class TransacaoApiTest extends ApiTest {
 
         mockMvc.perform(get("/clubs/99/transactions")).andExpect(status().isNotFound());
         mockMvc.perform(get("/clubs/99/transactions/export")).andExpect(status().isNotFound());
-        mockMvc.perform(get("/clubs/" + clube + "/transactions").param("player_id", "99")).andExpect(status().isNotFound());
+        mockMvc.perform(get("/clubs/" + clube + "/transactions").param("player_id", "99"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -143,7 +159,8 @@ class TransacaoApiTest extends ApiTest {
 
         mockMvc.perform(get("/clubs/" + clube + "/transactions/export"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("data_hora;tipo;jogador;valor;taxa_ou_comissao;multa;lucro;variacao_caixa\n"));
+                .andExpect(
+                        content().string("data_hora;tipo;jogador;valor;taxa_ou_comissao;multa;lucro;variacao_caixa\n"));
     }
 
     @Test
@@ -155,15 +172,18 @@ class TransacaoApiTest extends ApiTest {
         comprar(pontoEVirgula, clube, FIDELIDADE);
 
         byte[] corpo = mockMvc.perform(get("/clubs/" + clube + "/transactions/export"))
-                .andReturn().getResponse().getContentAsByteArray();
+                .andReturn()
+                .getResponse()
+                .getContentAsByteArray();
         String csv = new String(corpo, StandardCharsets.UTF_8);
 
         assertThat(corpo[0]).isEqualTo((byte) 'd');
         assertThat(csv).doesNotContain("\r");
-        assertThat(csv.split("\n", -1)).containsExactly(
-                "data_hora;tipo;jogador;valor;taxa_ou_comissao;multa;lucro;variacao_caixa",
-                "2026-11-02T10:15:00-03:00;COMPRA;\"Ana;Paula Souza\";40,00;2,00;0,00;;-42,00",
-                "2026-11-02T10:15:00-03:00;COMPRA;\"Zé \"\"Foguete\"\" Lima\";40,00;2,00;0,00;;-42,00",
-                "");
+        assertThat(csv.split("\n", -1))
+                .containsExactly(
+                        "data_hora;tipo;jogador;valor;taxa_ou_comissao;multa;lucro;variacao_caixa",
+                        "2026-11-02T10:15:00-03:00;COMPRA;\"Ana;Paula Souza\";40,00;2,00;0,00;;-42,00",
+                        "2026-11-02T10:15:00-03:00;COMPRA;\"Zé \"\"Foguete\"\" Lima\";40,00;2,00;0,00;;-42,00",
+                        "");
     }
 }

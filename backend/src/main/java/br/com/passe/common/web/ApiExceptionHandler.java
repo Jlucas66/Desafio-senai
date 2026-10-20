@@ -66,11 +66,11 @@ public class ApiExceptionHandler {
     }
 
     @ExceptionHandler({
-            HttpMessageNotReadableException.class,
-            HttpMediaTypeNotSupportedException.class,
-            MissingServletRequestParameterException.class,
-            ConstraintViolationException.class,
-            HandlerMethodValidationException.class
+        HttpMessageNotReadableException.class,
+        HttpMediaTypeNotSupportedException.class,
+        MissingServletRequestParameterException.class,
+        ConstraintViolationException.class,
+        HandlerMethodValidationException.class
     })
     public ResponseEntity<ErroResponse> tratarEntradaInvalida(Exception ex) {
         return resposta(HttpStatus.BAD_REQUEST, MSG_REQUISICAO_INVALIDA);

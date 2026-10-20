@@ -4,7 +4,4 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
-public record ClubeDetalheResponse(
-        @JsonUnwrapped ClubeResponse clube,
-        List<JogadorElencoResponse> players) {
-}
+public record ClubeDetalheResponse(@JsonUnwrapped ClubeResponse clube, List<JogadorElencoResponse> players) {}

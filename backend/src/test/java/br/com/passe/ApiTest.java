@@ -77,7 +77,9 @@ public abstract class ApiTest {
     protected int cadastrarJogador(Map<String, Object> jogador) throws Exception {
         String resposta = enviar(post("/players"), jogador)
                 .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
         JsonNode corpo = objectMapper.readTree(resposta);
         return corpo.get("id").asInt();
     }
@@ -85,13 +87,15 @@ public abstract class ApiTest {
     protected int criarClubePelaApi(String nome, String sigla) throws Exception {
         String resposta = enviar(post("/clubs"), Map.of("name", nome, "acronym", sigla))
                 .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
         return objectMapper.readTree(resposta).get("id").asInt();
     }
 
     protected ResultActions comprar(int jogadorId, int clubeId, String fimDaFidelidade) throws Exception {
-        return enviar(post("/players/" + jogadorId + "/buy"),
-                Map.of("club_id", clubeId, "loyalty_until", fimDaFidelidade));
+        return enviar(
+                post("/players/" + jogadorId + "/buy"), Map.of("club_id", clubeId, "loyalty_until", fimDaFidelidade));
     }
 
     protected ResultActions vender(int jogadorId) throws Exception {
