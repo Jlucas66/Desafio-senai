@@ -17,8 +17,13 @@ import br.com.passe.common.web.ParametrosConsulta;
 import br.com.passe.dto.FiltroTransacoes;
 import br.com.passe.dto.HistoricoResponse;
 import br.com.passe.service.TransacaoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Histórico de transações", description = "Compras e vendas do clube e exportação em CSV")
 @RestController
 @RequestMapping("/clubs" + Rotas.ID + "/transactions")
 @RequiredArgsConstructor
@@ -28,13 +33,21 @@ public class TransacaoController {
 
     private final TransacaoService transacaoService;
 
+    @Operation(summary = "Histórico do clube com o resumo dos totais (RN17)")
     @GetMapping
-    public HistoricoResponse listar(@PathVariable int id, @RequestParam Map<String, String> parametros) {
+    @Parameter(name = "type", in = ParameterIn.QUERY, description = "COMPRA, VENDA ou os dois, separados por vírgula")
+    @Parameter(name = "player_id", in = ParameterIn.QUERY, description = "Só as transações desse jogador")
+    public HistoricoResponse listar(
+            @PathVariable int id, @Parameter(hidden = true) @RequestParam Map<String, String> parametros) {
         return transacaoService.listar(id, FiltroTransacoes.de(new ParametrosConsulta(parametros)));
     }
 
+    @Operation(summary = "Exporta o histórico do clube em CSV (RN18)")
     @GetMapping("/export")
-    public ResponseEntity<String> exportar(@PathVariable int id, @RequestParam Map<String, String> parametros) {
+    @Parameter(name = "type", in = ParameterIn.QUERY, description = "COMPRA, VENDA ou os dois, separados por vírgula")
+    @Parameter(name = "player_id", in = ParameterIn.QUERY, description = "Só as transações desse jogador")
+    public ResponseEntity<String> exportar(
+            @PathVariable int id, @Parameter(hidden = true) @RequestParam Map<String, String> parametros) {
         String csv = transacaoService.exportarCsv(id, FiltroTransacoes.de(new ParametrosConsulta(parametros)));
         ContentDisposition anexo = ContentDisposition.attachment()
                 .filename("transacoes-clube-" + id + ".csv")
