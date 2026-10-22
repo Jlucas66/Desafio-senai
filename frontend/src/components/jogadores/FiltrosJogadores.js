@@ -1,17 +1,21 @@
 "use client";
 
-import { Search } from "lucide-react";
-import { useState } from "react";
+import { CircleDollarSign, HeartPulse, Search, Shirt, ShieldHalf, User, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { Botao } from "@/components/ui/Botao";
-import { Campo, Entrada, Selecao } from "@/components/ui/Campo";
-import { CONDICOES, POSICOES } from "@/lib/dominio";
+import { Campo, Entrada } from "@/components/ui/Campo";
+import { ItemDoMenu, Menu, TituloDoMenu } from "@/components/ui/Menu";
+import { CONDICOES, POSICOES, rotuloDaCondicao } from "@/lib/dominio";
+import { formatarMoeda } from "@/lib/formatacao";
 
-const FILTROS_VAZIOS = {
+const TEMPO_DA_BUSCA_EM_MS = 400;
+const TAMANHO_MINIMO_DA_BUSCA = 2;
+
+export const FILTROS_VAZIOS = {
   search: "",
   position: "",
   condition: "",
-  free: "",
   club_id: "",
   min_age: "",
   max_age: "",
@@ -19,90 +23,142 @@ const FILTROS_VAZIOS = {
   max_value: "",
 };
 
-const SITUACOES = [
-  { valor: "true", rotulo: "Só livres" },
-  { valor: "false", rotulo: "Só com clube" },
-];
-
-export function FiltrosJogadores({ clubes, aoAplicar }) {
-  const [filtros, setFiltros] = useState(FILTROS_VAZIOS);
-
-  function alterar(campo, valor) {
-    setFiltros((atuais) => {
-      const novos = { ...atuais, [campo]: valor };
-      // "Só livres" não combina com o filtro por clube (a API recusa com 400), então a tela impede a combinação.
-      return campo === "free" && valor === "true" ? { ...novos, club_id: "" } : novos;
-    });
+function textoDaFaixa(minimo, maximo, formatar = (valor) => valor) {
+  if (minimo && maximo) {
+    return `${formatar(minimo)} a ${formatar(maximo)}`;
   }
+  return minimo ? `a partir de ${formatar(minimo)}` : `até ${formatar(maximo)}`;
+}
 
-  function aplicar(evento) {
-    evento.preventDefault();
-    aoAplicar({ ...filtros, search: filtros.search.trim() });
-  }
+function FiltroDeFaixa({ icone, rotulo, campoMinimo, campoMaximo, filtros, aoMudar, formatar, passo, minimo, maximo }) {
+  const [faixa, setFaixa] = useState({ minimo: filtros[campoMinimo], maximo: filtros[campoMaximo] });
+  const ativo = Boolean(filtros[campoMinimo] || filtros[campoMaximo]);
 
-  function limpar() {
-    setFiltros(FILTROS_VAZIOS);
-    aoAplicar(FILTROS_VAZIOS);
-  }
-
-  const opcoesDeClube = clubes.map((clube) => ({ valor: String(clube.id), rotulo: clube.name }));
+  useEffect(() => {
+    setFaixa({ minimo: filtros[campoMinimo], maximo: filtros[campoMaximo] });
+  }, [filtros, campoMinimo, campoMaximo]);
 
   return (
-    <form onSubmit={aplicar} className="mb-4 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div className="sm:col-span-2">
-        <Campo id="filtro-busca" rotulo="Buscar pelo nome">
-          <Entrada
-            id="filtro-busca"
-            type="search"
-            placeholder="Ex.: joao, lua"
-            value={filtros.search}
-            onChange={(evento) => alterar("search", evento.target.value)}
-          />
+    <Menu icone={icone} ativo={ativo} rotulo={ativo ? `${rotulo}: ${textoDaFaixa(filtros[campoMinimo], filtros[campoMaximo], formatar)}` : rotulo} largura="w-64">
+      <TituloDoMenu>{rotulo}</TituloDoMenu>
+      <div className="grid grid-cols-2 gap-2 px-2.5 pb-2">
+        <Campo id={`${campoMinimo}-filtro`} rotulo="Mínimo">
+          <Entrada id={`${campoMinimo}-filtro`} type="number" min={minimo} max={maximo} step={passo} value={faixa.minimo} onChange={(evento) => setFaixa({ ...faixa, minimo: evento.target.value })} />
+        </Campo>
+        <Campo id={`${campoMaximo}-filtro`} rotulo="Máximo">
+          <Entrada id={`${campoMaximo}-filtro`} type="number" min={minimo} max={maximo} step={passo} value={faixa.maximo} onChange={(evento) => setFaixa({ ...faixa, maximo: evento.target.value })} />
         </Campo>
       </div>
-      <Campo id="filtro-posicao" rotulo="Posição">
-        <Selecao id="filtro-posicao" vazia="Todas" opcoes={POSICOES} value={filtros.position} onChange={(evento) => alterar("position", evento.target.value)} />
-      </Campo>
-      <Campo id="filtro-condicao" rotulo="Condição">
-        <Selecao id="filtro-condicao" vazia="Todas" opcoes={CONDICOES} value={filtros.condition} onChange={(evento) => alterar("condition", evento.target.value)} />
-      </Campo>
-      <Campo id="filtro-situacao" rotulo="Situação">
-        <Selecao id="filtro-situacao" vazia="Todos" opcoes={SITUACOES} value={filtros.free} onChange={(evento) => alterar("free", evento.target.value)} />
-      </Campo>
-      <Campo id="filtro-clube" rotulo="Clube" dica={filtros.free === "true" ? "Indisponível com “Só livres”." : undefined}>
-        <Selecao
-          id="filtro-clube"
-          vazia="Todos"
-          opcoes={opcoesDeClube}
-          value={filtros.club_id}
-          disabled={filtros.free === "true"}
-          onChange={(evento) => alterar("club_id", evento.target.value)}
-        />
-      </Campo>
-      <div className="grid grid-cols-2 gap-3">
-        <Campo id="filtro-idade-minima" rotulo="Idade mín.">
-          <Entrada id="filtro-idade-minima" type="number" min={16} max={45} value={filtros.min_age} onChange={(evento) => alterar("min_age", evento.target.value)} />
-        </Campo>
-        <Campo id="filtro-idade-maxima" rotulo="Idade máx.">
-          <Entrada id="filtro-idade-maxima" type="number" min={16} max={45} value={filtros.max_age} onChange={(evento) => alterar("max_age", evento.target.value)} />
-        </Campo>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <Campo id="filtro-valor-minimo" rotulo="Valor mín.">
-          <Entrada id="filtro-valor-minimo" type="number" min={0} max={550} step="0.01" value={filtros.min_value} onChange={(evento) => alterar("min_value", evento.target.value)} />
-        </Campo>
-        <Campo id="filtro-valor-maximo" rotulo="Valor máx.">
-          <Entrada id="filtro-valor-maximo" type="number" min={0} max={550} step="0.01" value={filtros.max_value} onChange={(evento) => alterar("max_value", evento.target.value)} />
-        </Campo>
-      </div>
-      <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-4 lg:justify-end">
-        <Botao variante="secundario" onClick={limpar}>
+      <div className="flex justify-end gap-2 px-2.5 pb-1">
+        <Botao variante="discreto" data-fecha-menu onClick={() => aoMudar({ ...filtros, [campoMinimo]: "", [campoMaximo]: "" })}>
           Limpar
         </Botao>
-        <Botao type="submit">
-          <Search className="size-4" /> Filtrar
+        <Botao data-fecha-menu onClick={() => aoMudar({ ...filtros, [campoMinimo]: faixa.minimo, [campoMaximo]: faixa.maximo })}>
+          Aplicar
         </Botao>
       </div>
-    </form>
+    </Menu>
+  );
+}
+
+function FiltroDeLista({ icone, rotulo, campo, opcoes, filtros, aoMudar, rotuloDoValor, desabilitado, dica }) {
+  const valor = filtros[campo];
+  return (
+    <div title={desabilitado ? dica : undefined}>
+      <Menu icone={icone} ativo={Boolean(valor)} desabilitado={desabilitado} rotulo={valor ? `${rotulo}: ${rotuloDoValor(valor)}` : rotulo}>
+        <TituloDoMenu>{rotulo}</TituloDoMenu>
+        <ItemDoMenu selecionado={!valor} onClick={() => aoMudar({ ...filtros, [campo]: "" })}>
+          Todos
+        </ItemDoMenu>
+        {opcoes.map((opcao) => (
+          <ItemDoMenu key={opcao.valor} selecionado={String(valor) === String(opcao.valor)} onClick={() => aoMudar({ ...filtros, [campo]: String(opcao.valor) })}>
+            {opcao.rotulo}
+          </ItemDoMenu>
+        ))}
+      </Menu>
+    </div>
+  );
+}
+
+export function FiltrosJogadores({ filtros, aoMudar, clubes, clubeIndisponivel }) {
+  const [busca, setBusca] = useState(filtros.search);
+
+  useEffect(() => {
+    setBusca(filtros.search);
+  }, [filtros.search]);
+
+  useEffect(() => {
+    const texto = busca.trim();
+    // A API aceita busca de 2 a 100 caracteres: com 1 caractere, a tela espera o próximo.
+    if (texto === filtros.search || (texto.length > 0 && texto.length < TAMANHO_MINIMO_DA_BUSCA)) {
+      return undefined;
+    }
+    const temporizador = setTimeout(() => aoMudar({ ...filtros, search: texto }), TEMPO_DA_BUSCA_EM_MS);
+    return () => clearTimeout(temporizador);
+  }, [busca, filtros, aoMudar]);
+
+  const opcoesDeClube = clubes.map((clube) => ({ valor: clube.id, rotulo: clube.name }));
+  const nomeDoClube = (id) => clubes.find((clube) => String(clube.id) === String(id))?.name ?? `Clube ${id}`;
+
+  return (
+    <div className="mb-4 flex flex-wrap gap-2 rounded-2xl border border-slate-200 p-2">
+      <div className="min-w-56 flex-1">
+        <Entrada id="busca" type="search" icone={Search} placeholder="Buscar por nome" aria-label="Buscar por nome" value={busca} onChange={(evento) => setBusca(evento.target.value)} />
+      </div>
+      <FiltroDeLista icone={Shirt} rotulo="Posição" campo="position" opcoes={POSICOES.map((posicao) => ({ valor: posicao.valor, rotulo: `${posicao.valor} · ${posicao.rotulo}` }))} filtros={filtros} aoMudar={aoMudar} rotuloDoValor={(valor) => valor} />
+      <FiltroDeLista icone={HeartPulse} rotulo="Condição" campo="condition" opcoes={CONDICOES} filtros={filtros} aoMudar={aoMudar} rotuloDoValor={rotuloDaCondicao} />
+      <FiltroDeLista
+        icone={ShieldHalf}
+        rotulo="Clube"
+        campo="club_id"
+        opcoes={opcoesDeClube}
+        filtros={filtros}
+        aoMudar={aoMudar}
+        rotuloDoValor={nomeDoClube}
+        desabilitado={clubeIndisponivel}
+        dica="“Livres” não combina com o filtro por clube."
+      />
+      <FiltroDeFaixa icone={User} rotulo="Idade" campoMinimo="min_age" campoMaximo="max_age" filtros={filtros} aoMudar={aoMudar} passo={1} minimo={16} maximo={45} />
+      <FiltroDeFaixa icone={CircleDollarSign} rotulo="Valor de mercado" campoMinimo="min_value" campoMaximo="max_value" filtros={filtros} aoMudar={aoMudar} formatar={formatarMoeda} passo="0.01" minimo={0} maximo={550} />
+    </div>
+  );
+}
+
+export function FiltrosAtivos({ filtros, aoMudar, clubes }) {
+  const nomeDoClube = clubes.find((clube) => String(clube.id) === String(filtros.club_id))?.name;
+  const ativos = [
+    filtros.search && { campos: ["search"], rotulo: `Busca: ${filtros.search}` },
+    filtros.position && { campos: ["position"], rotulo: `Posição: ${filtros.position}` },
+    filtros.condition && { campos: ["condition"], rotulo: `Condição: ${rotuloDaCondicao(filtros.condition)}` },
+    filtros.club_id && { campos: ["club_id"], rotulo: `Clube: ${nomeDoClube ?? filtros.club_id}` },
+    (filtros.min_age || filtros.max_age) && { campos: ["min_age", "max_age"], rotulo: `Idade: ${textoDaFaixa(filtros.min_age, filtros.max_age)}` },
+    (filtros.min_value || filtros.max_value) && {
+      campos: ["min_value", "max_value"],
+      rotulo: `Valor de mercado: ${textoDaFaixa(filtros.min_value, filtros.max_value, formatarMoeda)}`,
+    },
+  ].filter(Boolean);
+
+  if (ativos.length === 0) {
+    return null;
+  }
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+      <span className="text-slate-600">Filtros ativos:</span>
+      {ativos.map((ativo) => (
+        <span key={ativo.rotulo} className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-900">
+          {ativo.rotulo}
+          <button
+            type="button"
+            aria-label={`Remover filtro ${ativo.rotulo}`}
+            onClick={() => aoMudar({ ...filtros, ...Object.fromEntries(ativo.campos.map((campo) => [campo, ""])) })}
+          >
+            <X className="size-3.5" />
+          </button>
+        </span>
+      ))}
+      <Botao variante="link" onClick={() => aoMudar(FILTROS_VAZIOS)}>
+        Limpar filtros
+      </Botao>
+    </div>
   );
 }
