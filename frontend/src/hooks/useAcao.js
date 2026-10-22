@@ -2,13 +2,16 @@
 
 import { useCallback, useRef, useState } from "react";
 
-import { useAvisos } from "@/contexts/AvisosContext";
+import { useAtualizacao } from "@/contexts/AtualizacaoContext";
 
 // Envia uma ação uma única vez por clique: enquanto o pedido está em andamento, novos cliques são ignorados.
-export function useAcao(acao, { mensagemDeSucesso, aoConcluir } = {}) {
-  const avisos = useAvisos();
+// Depois do sucesso, as listas são atualizadas pela API (salvo nas ações que não mudam dados, como exportar);
+// o erro fica guardado para a tela mostrar o message.
+export function useAcao(acao, aoConcluir, { atualizarDados = true } = {}) {
+  const { atualizar } = useAtualizacao();
   const emAndamento = useRef(false);
   const [enviando, setEnviando] = useState(false);
+  const [erro, setErro] = useState(null);
 
   const executar = useCallback(
     async (...argumentos) => {
@@ -17,21 +20,22 @@ export function useAcao(acao, { mensagemDeSucesso, aoConcluir } = {}) {
       }
       emAndamento.current = true;
       setEnviando(true);
+      setErro(null);
       try {
         const resultado = await acao(...argumentos);
-        if (mensagemDeSucesso) {
-          avisos.sucesso(typeof mensagemDeSucesso === "function" ? mensagemDeSucesso(resultado) : mensagemDeSucesso);
+        if (atualizarDados) {
+          atualizar();
         }
         aoConcluir?.(resultado);
-      } catch (erro) {
-        avisos.erro(erro.message);
+      } catch (erroDaApi) {
+        setErro(erroDaApi);
       } finally {
         emAndamento.current = false;
         setEnviando(false);
       }
     },
-    [acao, mensagemDeSucesso, aoConcluir, avisos],
+    [acao, aoConcluir, atualizar, atualizarDados],
   );
 
-  return { executar, enviando };
+  return { executar, enviando, erro };
 }

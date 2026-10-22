@@ -1,7 +1,7 @@
 // Validações de um campo só, feitas antes de enviar; as regras que cruzam campos ficam com a API.
 
-export function obrigatorio(valor) {
-  return valor === null || valor === undefined || String(valor).trim() === "" ? "Campo obrigatório." : null;
+export function obrigatorio(mensagem = "Campo obrigatório.") {
+  return (valor) => (valor === null || valor === undefined || String(valor).trim() === "" ? mensagem : null);
 }
 
 export function textoEntre(minimo, maximo) {
@@ -11,12 +11,10 @@ export function textoEntre(minimo, maximo) {
   };
 }
 
-export function inteiroEntre(minimo, maximo) {
+export function inteiroEntre(minimo, maximo, mensagem = `Use um valor de ${minimo} a ${maximo}.`) {
   return (valor) => {
     const numero = Number(valor);
-    return !Number.isInteger(numero) || numero < minimo || numero > maximo
-      ? `Informe um número inteiro de ${minimo} a ${maximo}.`
-      : null;
+    return !Number.isInteger(numero) || numero < minimo || numero > maximo ? mensagem : null;
   };
 }
 

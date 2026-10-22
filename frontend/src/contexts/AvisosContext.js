@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleAlert, CircleCheck, X } from "lucide-react";
+import { CircleCheck, X } from "lucide-react";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 
 const TEMPO_NA_TELA_EM_MS = 6000;
@@ -14,42 +14,29 @@ export function AvisosProvider({ children }) {
     setAvisos((atuais) => atuais.filter((aviso) => aviso.id !== id));
   }, []);
 
-  const mostrar = useCallback(
-    (tipo, mensagem) => {
+  const sucesso = useCallback(
+    (titulo, mensagem) => {
       const id = crypto.randomUUID();
-      setAvisos((atuais) => [...atuais, { id, tipo, mensagem }]);
+      setAvisos((atuais) => [...atuais, { id, titulo, mensagem }]);
       setTimeout(() => fechar(id), TEMPO_NA_TELA_EM_MS);
     },
     [fechar],
   );
 
-  const api = useMemo(
-    () => ({
-      sucesso: (mensagem) => mostrar("sucesso", mensagem),
-      erro: (mensagem) => mostrar("erro", mensagem),
-    }),
-    [mostrar],
-  );
+  const valor = useMemo(() => ({ sucesso }), [sucesso]);
 
   return (
-    <AvisosContext.Provider value={api}>
+    <AvisosContext.Provider value={valor}>
       {children}
-      <div className="fixed right-4 bottom-4 z-50 flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2" aria-live="polite">
+      <div className="fixed right-4 bottom-4 z-[60] flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-2" aria-live="polite">
         {avisos.map((aviso) => (
-          <div
-            key={aviso.id}
-            role={aviso.tipo === "erro" ? "alert" : "status"}
-            className={`flex items-start gap-3 rounded-xl border bg-white p-4 text-sm shadow-lg ${
-              aviso.tipo === "erro" ? "border-red-200 text-red-800" : "border-emerald-200 text-emerald-800"
-            }`}
-          >
-            {aviso.tipo === "erro" ? (
-              <CircleAlert className="mt-0.5 size-4 shrink-0" />
-            ) : (
-              <CircleCheck className="mt-0.5 size-4 shrink-0" />
-            )}
-            <p className="flex-1">{aviso.mensagem}</p>
-            <button type="button" onClick={() => fechar(aviso.id)} aria-label="Fechar aviso" className="text-slate-400 hover:text-slate-600">
+          <div key={aviso.id} role="status" className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-lg">
+            <CircleCheck className="mt-0.5 size-4 shrink-0 text-emerald-600" aria-hidden />
+            <div className="flex-1 text-sm">
+              <p className="font-medium text-slate-900">{aviso.titulo}</p>
+              <p className="mt-0.5 text-slate-600">{aviso.mensagem}</p>
+            </div>
+            <button type="button" onClick={() => fechar(aviso.id)} aria-label="Fechar aviso" className="text-slate-400 hover:text-slate-700">
               <X className="size-4" />
             </button>
           </div>

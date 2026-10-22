@@ -3,9 +3,11 @@
 @theme {
   --color-primaria: #1a5cff;
   --color-primaria-escura: #1447d1;
+  --color-gramado: #1d5a32;
+  --color-gramado-claro: #236a3b;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply bg-slate-100 text-slate-900 antialiased;
 }

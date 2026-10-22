@@ -1,12 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+
+import { useAtualizacao } from "@/contexts/AtualizacaoContext";
 
 // Carrega dados da API e expõe os três estados das telas de lista: carregando, erro e dados.
-// A função recebida deve vir de um useCallback: quando ela muda (outros filtros), os dados são buscados de novo.
+// A função recebida deve vir de um useCallback: quando ela muda (outros filtros), os dados são buscados de novo,
+// e também depois de cada ação, pela versão global de atualização.
 export function useCarregamento(buscar) {
+  const { versao, atualizar } = useAtualizacao();
   const [estado, setEstado] = useState({ dados: null, carregando: true, erro: null });
-  const [versao, setVersao] = useState(0);
 
   useEffect(() => {
     let ativo = true;
@@ -19,7 +22,5 @@ export function useCarregamento(buscar) {
     };
   }, [buscar, versao]);
 
-  const recarregar = useCallback(() => setVersao((atual) => atual + 1), []);
-
-  return { ...estado, recarregar };
+  return { ...estado, tentarDeNovo: atualizar };
 }

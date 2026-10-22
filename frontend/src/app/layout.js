@@ -1,7 +1,9 @@
 import { Inter } from "next/font/google";
 
-import { Cabecalho } from "@/components/layout/Cabecalho";
+import { Estrutura } from "@/components/layout/Estrutura";
+import { AtualizacaoProvider } from "@/contexts/AtualizacaoContext";
 import { AvisosProvider } from "@/contexts/AvisosContext";
+import { ResumoDaLigaProvider } from "@/contexts/ResumoDaLigaContext";
 
 import "./globals.css";
 
@@ -15,14 +17,14 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR" className={inter.variable}>
-      <body className="flex min-h-screen flex-col">
-        <AvisosProvider>
-          <Cabecalho />
-          <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6">{children}</main>
-          <footer className="border-t border-slate-200 bg-white py-4 text-center text-xs text-slate-500">
-            Liga Fictícia 2026 · Horário de Brasília (UTC−3)
-          </footer>
-        </AvisosProvider>
+      <body>
+        <AtualizacaoProvider>
+          <AvisosProvider>
+            <ResumoDaLigaProvider>
+              <Estrutura>{children}</Estrutura>
+            </ResumoDaLigaProvider>
+          </AvisosProvider>
+        </AtualizacaoProvider>
       </body>
     </html>
   );

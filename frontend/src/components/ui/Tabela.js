@@ -1,59 +1,57 @@
-import { CircleAlert, Inbox, LoaderCircle } from "lucide-react";
+import { EstadoDaLista } from "./EstadoDaLista";
 
 const ALINHAMENTOS = { esquerda: "text-left", direita: "text-right", centro: "text-center" };
+const LINHAS_DO_ESQUELETO = 6;
 
-function LinhaDeEstado({ colunas, children }) {
+export function Tabela({ colunas, itens, carregando, erro, tentarDeNovo, vazia, tituloDoErro, chaveDoItem = (item) => item.id, destacarLinha }) {
+  if (erro) {
+    return (
+      <EstadoDaLista
+        tipo="erro"
+        titulo={tituloDoErro}
+        texto={erro.message}
+        acao={{ rotulo: "Tentar de novo", aoClicar: tentarDeNovo }}
+      />
+    );
+  }
+  if (!carregando && itens.length === 0) {
+    return <EstadoDaLista {...vazia} />;
+  }
   return (
-    <tr>
-      <td colSpan={colunas} className="px-4 py-10 text-center text-sm text-slate-500">
-        <div className="flex flex-col items-center gap-2">{children}</div>
-      </td>
-    </tr>
-  );
-}
-
-export function Tabela({ colunas, itens, carregando, erro, mensagemVazia, chaveDoItem = (item) => item.id }) {
-  return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-      <table className="w-full min-w-max text-sm">
-        <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead className="border-y border-slate-200 bg-slate-50 text-slate-600">
           <tr>
             {colunas.map((coluna) => (
-              <th key={coluna.titulo} scope="col" className={`px-4 py-3 font-medium ${ALINHAMENTOS[coluna.alinhar ?? "esquerda"]}`}>
+              <th key={coluna.titulo || "acoes"} scope="col" className={`px-2.5 py-2.5 font-normal ${ALINHAMENTOS[coluna.alinhar ?? "esquerda"]}`}>
                 {coluna.titulo}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
-          {carregando ? (
-            <LinhaDeEstado colunas={colunas.length}>
-              <LoaderCircle className="size-5 animate-spin text-primaria" aria-hidden />
-              Carregando...
-            </LinhaDeEstado>
-          ) : erro ? (
-            <LinhaDeEstado colunas={colunas.length}>
-              <CircleAlert className="size-5 text-red-500" aria-hidden />
-              <span className="text-red-700">{erro.message}</span>
-            </LinhaDeEstado>
-          ) : itens.length === 0 ? (
-            <LinhaDeEstado colunas={colunas.length}>
-              <Inbox className="size-5" aria-hidden />
-              {mensagemVazia}
-            </LinhaDeEstado>
-          ) : (
-            itens.map((item) => (
-              <tr key={chaveDoItem(item)} className="hover:bg-slate-50/70">
-                {colunas.map((coluna) => (
-                  <td key={coluna.titulo} className={`px-4 py-3 text-slate-700 ${ALINHAMENTOS[coluna.alinhar ?? "esquerda"]}`}>
-                    {coluna.conteudo(item)}
-                  </td>
-                ))}
-              </tr>
-            ))
-          )}
+        <tbody className="divide-y divide-slate-100" aria-busy={carregando}>
+          {carregando
+            ? Array.from({ length: LINHAS_DO_ESQUELETO }, (_, indice) => (
+                <tr key={indice}>
+                  {colunas.map((coluna) => (
+                    <td key={coluna.titulo || "acoes"} className="px-2.5 py-4">
+                      <span className="block h-3 animate-pulse rounded-full bg-slate-100" />
+                    </td>
+                  ))}
+                </tr>
+              ))
+            : itens.map((item) => (
+                <tr key={chaveDoItem(item)} className={destacarLinha?.(item) ? "bg-blue-50/50" : "hover:bg-slate-50/60"}>
+                  {colunas.map((coluna) => (
+                    <td key={coluna.titulo || "acoes"} className={`px-2.5 py-3 text-slate-700 ${ALINHAMENTOS[coluna.alinhar ?? "esquerda"]}`}>
+                      {coluna.conteudo(item)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
         </tbody>
       </table>
+      {carregando && <p className="sr-only">Carregando...</p>}
     </div>
   );
 }
