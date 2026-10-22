@@ -255,17 +255,20 @@ Algumas coisas o enunciado deixa em aberto, e outras pedem uma escolha de implem
 - **O navegador chama a API direto**, no endereço de `NEXT_PUBLIC_API_URL`. O CORS do backend já libera a origem do frontend, então não precisei de proxy nem de rotas de API no Next.js.
 - **Toda chamada à API fica em `src/services`.** Os componentes nunca usam `fetch`: recebem os dados por hooks (`useCarregamento` para as listas e `useAcao` para as ações).
 - **Cada ação é enviada uma única vez.** O `useAcao` ignora novos cliques enquanto o pedido está em andamento e desabilita o botão; assim, um clique duplo não cria dois registros.
-- **Nada do que a API calcula é recalculado na tela.** Depois de cada ação, a lista é buscada de novo na API. As mensagens de sucesso mostram os valores devolvidos por ela (por exemplo, o overall e o valor base do jogador recém-cadastrado).
+- **Nada do que a API calcula é recalculado na tela.** Depois de cada ação, todas as listas da tela (e os contadores da barra lateral) são buscadas de novo na API, por um contexto de atualização; o botão de atualizar da barra superior faz o mesmo. A única conta feita na tela é o custo total da compra (valor + taxa), que o enunciado permite. As mensagens de sucesso mostram os valores devolvidos por ela (por exemplo, o overall e o valor base do jogador recém-cadastrado).
 - **Os formulários validam só o que é de um campo** (obrigatórios, tamanho dos textos e faixas numéricas), com a mensagem embaixo do campo. Regras que cruzam campos ou dependem do banco ficam com a API, e a tela mostra o `message` que ela devolve.
 - **Recusas que a tela consegue prever são evitadas na própria tela:**
   - "Só livres" desabilita o filtro por clube;
   - quem está DOENTE não tem a opção APTO na troca de condição;
   - jogador com clube não pode mudar de posição na edição.
+- **Visual seguindo o mockup do Figma:** barra lateral com os contadores e a lista de clubes, filtros em menus, abas "Todos / Livres / Em clubes" e janelas de confirmação e de resultado. Os contadores das abas são o `total_items` que a API devolve para cada situação, com os mesmos filtros.
+- **Erros das ações aparecem dentro da própria janela**, com o `message` da API; sem resposta do servidor, a janela avisa "Sem conexão" e oferece "Tentar de novo".
+- **Escalação por vagas:** cada vaga da formação só oferece os jogadores do elenco que encaixam nela e não estão DOENTE; a situação da escalação (completa ou não) vem da API. O desenho do campo na partida é montado só com os duelos devolvidos pela API.
 - **Datas digitadas são do horário de Brasília**: o campo de data e hora recebe o valor e a tela acrescenta `-03:00` antes de enviar. As datas que vêm da API (já em `-03:00`) só são reorganizadas para `dd/mm/aaaa hh:mm`, sem conversão de fuso.
 
 ## 7. Funcionalidades não implementadas
 
-No backend, nenhuma: todos os endpoints e regras do enunciado estão implementados e testados. No frontend, já estão prontas as telas de jogadores, de clubes e a página do clube com o elenco; compra, venda, histórico, escalação, partidas e classificação estão em desenvolvimento.
+No backend, nenhuma: todos os endpoints e regras do enunciado estão implementados e testados. No frontend, todas as telas do enunciado estão prontas (jogadores, clubes, compra, venda, histórico com CSV, escalação, partidas e classificação). Ainda faltam os diferenciais de interface: testes automatizados, lint e formatação do frontend e o serviço do frontend no Docker Compose.
 
 ## 8. Uso de inteligência artificial
 
