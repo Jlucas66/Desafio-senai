@@ -72,9 +72,16 @@ Cada requisição gera uma linha no log do terminal do backend, com data e hora,
 2026-11-02T10:15:00.123-03:00  INFO ... RegistroDeRequisicoesFilter : GET /api/v1/players?search=lua 200 (7 ms)
 ```
 
-### Frontend
+### Frontend (em outro terminal, na pasta `frontend`, com a API no ar)
 
-Em construção.
+```bash
+cd frontend
+npm ci
+npm run build
+npm start
+```
+
+A interface abre em `http://localhost:3000`. Para desenvolver, troque os dois últimos comandos por `npm run dev`, que recarrega a tela a cada alteração. O arquivo de trava (`package-lock.json`) está versionado, então o `npm ci` instala exatamente as mesmas versões.
 
 ### Tudo pelo Docker (na raiz do repositório)
 
@@ -124,6 +131,14 @@ Todas as variáveis estão no `.env.example` da raiz. É só copiar para `.env`,
 | `SERVER_PORT` | `8080` | Backend | Porta da API |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:3000` | Backend | Origens do frontend aceitas pelo CORS (várias, separadas por vírgula) |
 
+No frontend, a única variável fica em `frontend/.env.example`:
+
+| Variável | Padrão | Para que serve |
+| --- | --- | --- |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8080/api/v1` | Endereço da API, já com o `/api/v1` |
+
+Ela já tem o valor padrão no código, então só é preciso copiar o arquivo (`cp .env.example .env.local`, na pasta `frontend`) se a API estiver em outro endereço. Como começa com `NEXT_PUBLIC_`, o valor entra no build: mudou, rode `npm run build` de novo.
+
 O Spring não lê o `.env` sozinho: quando o backend roda pelo Maven, ele usa os valores padrão acima, que são os mesmos do `.env.example`. Se mudar algum valor, exporte as variáveis antes de subir a API (`set -a; . ../.env; set +a`, na pasta `backend`). No Docker Compose, a API recebe as variáveis do banco já apontando para o contêiner `db`.
 
 ## 5. Estrutura de pastas e bibliotecas
@@ -146,6 +161,13 @@ O Spring não lê o `.env` sozinho: quando o backend roda pelo Maven, ele usa os
 │   ├── checkstyle.xml          regras de lint
 │   └── Dockerfile              imagem da API
 ├── frontend/                   interface (Next.js)
+│   └── src/
+│       ├── app/                páginas (jogadores, clubes, página do clube...)
+│       ├── components/         componentes de tela e componentes compartilhados (ui/)
+│       ├── services/           única camada que chama a API
+│       ├── hooks/              carregamento das listas, envio das ações e formulários
+│       ├── contexts/           avisos de sucesso e de erro
+│       └── lib/                formatação de moeda e data, validação e listas do domínio
 ├── docs/                       enunciado, barema e coleção do Postman
 ├── docker-compose.yml          banco e API (e, depois, a interface)
 └── .env.example                variáveis de ambiente
@@ -169,7 +191,14 @@ O Spring não lê o `.env` sozinho: quando o backend roda pelo Maven, ele usa os
 
 ### Bibliotecas do frontend
 
-Em construção.
+| Biblioteca | Por que usei |
+| --- | --- |
+| Next.js 15 (App Router) com React 19 | Base da interface, com as rotas de cada tela por pasta |
+| Tailwind CSS 4 | Estilo direto nos componentes, com as cores do mockup definidas uma vez no tema |
+| lucide-react | Ícones de traço fino, no mesmo estilo do mockup |
+| ESLint (configuração do Next) | Aponta erros comuns de React e de hooks enquanto desenvolvo |
+
+As chamadas à API usam o `fetch` do próprio navegador, sem biblioteca extra.
 
 ## 6. Decisões e premissas
 
@@ -221,9 +250,25 @@ Algumas coisas o enunciado deixa em aberto, e outras pedem uma escolha de implem
 - **Log de requisições**: um filtro registra uma linha por requisição, pelo Logback que já vem com o Spring Boot. Silenciei o aviso padrão do Spring para caminhos inexistentes, para que cada requisição gere só a sua linha.
 - **A imagem Docker da API compila sem rodar os testes** (`-DskipTests`), porque os testes precisam do próprio Docker (Testcontainers). Eles rodam fora, com `mvn test`. O contêiner usa o fuso `America/Sao_Paulo`, para o log mostrar o horário de Brasília.
 
+**Frontend**
+
+- **O navegador chama a API direto**, no endereço de `NEXT_PUBLIC_API_URL`. O CORS do backend já libera a origem do frontend, então não precisei de proxy nem de rotas de API no Next.js.
+- **Toda chamada à API fica em `src/services`.** Os componentes nunca usam `fetch`: recebem os dados por hooks (`useCarregamento` para as listas e `useAcao` para as ações).
+- **Cada ação é enviada uma única vez.** O `useAcao` ignora novos cliques enquanto o pedido está em andamento e desabilita o botão; assim, um clique duplo não cria dois registros.
+- **Nada do que a API calcula é recalculado na tela.** Depois de cada ação, todas as listas da tela (e os contadores da barra lateral) são buscadas de novo na API, por um contexto de atualização; o botão de atualizar da barra superior faz o mesmo. A única conta feita na tela é o custo total da compra (valor + taxa), que o enunciado permite. As mensagens de sucesso mostram os valores devolvidos por ela (por exemplo, o overall e o valor base do jogador recém-cadastrado).
+- **Os formulários validam só o que é de um campo** (obrigatórios, tamanho dos textos e faixas numéricas), com a mensagem embaixo do campo. Regras que cruzam campos ou dependem do banco ficam com a API, e a tela mostra o `message` que ela devolve.
+- **Recusas que a tela consegue prever são evitadas na própria tela:**
+  - "Só livres" desabilita o filtro por clube;
+  - quem está DOENTE não tem a opção APTO na troca de condição;
+  - jogador com clube não pode mudar de posição na edição.
+- **Visual seguindo o mockup do Figma:** barra lateral com os contadores e a lista de clubes, filtros em menus, abas "Todos / Livres / Em clubes" e janelas de confirmação e de resultado. Os contadores das abas são o `total_items` que a API devolve para cada situação, com os mesmos filtros.
+- **Erros das ações aparecem dentro da própria janela**, com o `message` da API; sem resposta do servidor, a janela avisa "Sem conexão" e oferece "Tentar de novo".
+- **Escalação por vagas:** cada vaga da formação só oferece os jogadores do elenco que encaixam nela e não estão DOENTE; a situação da escalação (completa ou não) vem da API. O desenho do campo na partida é montado só com os duelos devolvidos pela API.
+- **Datas digitadas são do horário de Brasília**: o campo de data e hora recebe o valor e a tela acrescenta `-03:00` antes de enviar. As datas que vêm da API (já em `-03:00`) só são reorganizadas para `dd/mm/aaaa hh:mm`, sem conversão de fuso.
+
 ## 7. Funcionalidades não implementadas
 
-No backend, nenhuma: todos os endpoints e regras do enunciado estão implementados e testados. O frontend ainda está em desenvolvimento.
+No backend, nenhuma: todos os endpoints e regras do enunciado estão implementados e testados. No frontend, todas as telas do enunciado estão prontas (jogadores, clubes, compra, venda, histórico com CSV, escalação, partidas e classificação). Ainda faltam os diferenciais de interface: testes automatizados, lint e formatação do frontend e o serviço do frontend no Docker Compose.
 
 ## 8. Uso de inteligência artificial
 
@@ -235,6 +280,7 @@ No backend, nenhuma: todos os endpoints e regras do enunciado estão implementad
   - todos os módulos do backend (jogadores, clubes, compra e venda, histórico e CSV, escalação, partidas e classificação), com os cálculos, as validações e os endpoints;
   - testes automatizados e coleção do Postman;
   - configuração do Swagger, do log, do Checkstyle e do Spotless;
+  - frontend: estrutura do projeto Next.js, componentes compartilhados e telas;
   - revisão do texto deste README.
 - **Como e por quê:** usei o assistente como um par de programação. Dividi o backend em etapas e pedi uma de cada vez; ao fim de cada uma, pedi a explicação do código, apontando em que parte do enunciado cada regra é pedida, para entender o que estava sendo feito e conseguir explicar depois. Antes de cada commit, conferi o resultado pelos testes automatizados e rodando a coleção no Postman.
 - **O que aceitei, alterei ou descartei:** a primeira versão do módulo de jogadores veio organizada por funcionalidade, com as regras dentro das entidades; pedi para refazer na arquitetura em camadas, com as regras nos services, e o resto do projeto seguiu esse padrão. Aceitei os cálculos depois de conferi-los com as tabelas de exemplo do enunciado, que viraram testes. As mensagens de commit e a divisão dos commits são minhas.

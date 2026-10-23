@@ -17,3 +17,10 @@ frontend/out/
 *.iml
 .DS_Store
 CLAUDE.md
+docs/jogadores/
+docs/clubes/
+docs/compra/
+docs/estados/
+docs/historico/
+docs/liga/
+docs/venda/
